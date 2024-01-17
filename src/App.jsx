@@ -2,10 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { Spinner } from "@nextui-org/react";
 import axios from "axios";
-import Nav from "./Components/Global/Nav";
-import Products from "./Pages/Products/Products";
-import Login from "./Pages/Login/Login";
-import Settings from "./Pages/Settings/Settings";
 import { API_URL } from "./API/API";
 
 export default function App() {

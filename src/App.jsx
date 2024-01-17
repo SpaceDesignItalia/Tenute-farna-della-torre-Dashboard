@@ -3,12 +3,15 @@ import { Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { Spinner } from "@nextui-org/react";
 import axios from "axios";
 import { API_URL } from "./API/API";
+import Home from "./Pages/Home/Home";
+import Sidebar from "./Components/Layout/Sidebar";
+import ProductDashboard from "./Pages/Product/ProductDashboard";
 
 export default function App() {
-  const [isAuth, setIsAuth] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  /* useEffect(() => {
     axios
       .get(API_URL + "Auth/CheckSession", { withCredentials: true })
       .then((res) => {
@@ -21,7 +24,7 @@ export default function App() {
         console.log(err);
         setIsLoading(false);
       });
-  }, []);
+  }, []); */
 
   if (isLoading) {
     return (
@@ -49,12 +52,14 @@ export default function App() {
 
   return (
     <>
+      {isAuth && <Sidebar />}
       <Routes>
         <Route element={<LoginRoute isAuth={isAuth} />}>
-          <Route exact path="/login" element={<Login />} />
+          {/* <Route exact path="/login" element={<Login />} /> */}
         </Route>
         <Route element={<ProtectedRoute isAuth={isAuth} />}>
-          <Route exact path="/" element={<Products />} />
+          <Route exact path="/" element={<Home />} />
+          <Route exact path="/products" element={<ProductDashboard />} />
         </Route>
       </Routes>
     </>

@@ -6,6 +6,7 @@ import { API_URL } from "./API/API";
 import Home from "./Pages/Home/Home";
 import Sidebar from "./Components/Layout/Sidebar";
 import ProductDashboard from "./Pages/Product/ProductDashboard";
+import AddProduct from "./Pages/Product/AddProduct";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(true);
@@ -60,6 +61,7 @@ export default function App() {
         <Route element={<ProtectedRoute isAuth={isAuth} />}>
           <Route exact path="/" element={<Home />} />
           <Route exact path="/products" element={<ProductDashboard />} />
+          <Route exact path="/products/add-product" element={<AddProduct />} />
         </Route>
       </Routes>
     </>

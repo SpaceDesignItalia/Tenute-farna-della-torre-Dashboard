@@ -16,6 +16,7 @@ import {
   Link,
 } from "@nextui-org/react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 const columns = [
   { name: "ID", uid: "id", sortable: true },
@@ -38,42 +39,6 @@ const products = [
     productAmount: "100",
     unitPrice: "20.00",
   },
-  {
-    id: 3,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 4,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-  {
-    id: 5,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 6,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-  {
-    id: 7,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 8,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
 ];
 const INITIAL_VISIBLE_COLUMNS = [
   "id",
@@ -83,7 +48,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-export default function ProductTable() {
+export default function FeaturedProductTable() {
   const [filterValue, setFilterValue] = React.useState("");
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
@@ -150,22 +115,7 @@ export default function ProductTable() {
       case "unitPrice":
         return <div>€ {product.unitPrice}</div>;
       case "actions":
-        return (
-          <div className="relative flex justify-end items-center gap-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly size="sm" variant="light">
-                  Opt
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                <DropdownItem>View</DropdownItem>
-                <DropdownItem>Edit</DropdownItem>
-                <DropdownItem>Delete</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
+        return <div>Rimuovi</div>;
       default:
         return cellValue;
     }
@@ -207,11 +157,12 @@ export default function ProductTable() {
           />
           <Button
             as={Link}
-            href="/products/add-product"
+            href="/products/add-product-in-featured"
+            startContent={<AddRoundedIcon />}
             color="primary"
             radius="sm"
           >
-            Aggiungi prodotto
+            Aggiungi prodotto in evidenza
           </Button>
         </div>
       </div>

@@ -1,8 +1,10 @@
-import React, { useState } from "react";
-import { Button, Input } from "@nextui-org/react";
+import React, { useState, useRef } from "react";
+import { Button, Input, Avatar } from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 
 export default function AddProduct() {
   const [alertData, setAlertData] = useState({
@@ -17,6 +19,9 @@ export default function AddProduct() {
     productAmount: 0,
     unitPrice: 0,
   });
+  const [photos, setPhotos] = useState([]);
+  const fileInputRef = useRef(null);
+
   const modules = {
     toolbar: [
       ["bold", "italic", "underline", "strike", "blockquote"],
@@ -78,7 +83,8 @@ export default function AddProduct() {
       newProduct.productName !== "" &&
       newProduct.productDescription !== "" &&
       newProduct.productAmount !== 0 &&
-      newProduct.unitPrice !== 0
+      newProduct.unitPrice !== 0 &&
+      photos.length !== 0
     ) {
       return false;
     }
@@ -98,6 +104,30 @@ export default function AddProduct() {
     }, 1000);
   }
 
+  function handleAddProduct() {
+    // Imposta il titolo e il messaggio della notifica
+    setAlertData({
+      ...alertData,
+      isOpen: true,
+      variant: "success",
+      title: "Prodotto aggiunto",
+      message: "Il prodotto è stato aggiunto con successo",
+    });
+
+    const formData = new FormData();
+    formData.append("productName", newProduct.productName);
+    formData.append("productDescription", newProduct.productDescription);
+    formData.append("productAmount", newProduct.productAmount);
+    formData.append("unitPrice", newProduct.unitPrice);
+    photos.forEach((photo, index) => {
+      formData.append(`photo${index + 1}`, photo.file);
+    });
+
+    formData.forEach((value, key) => {
+      console.log(key + " " + value);
+    });
+  }
+
   const handleClose = (event, reason) => {
     setAlertData({
       ...alertData,
@@ -106,6 +136,28 @@ export default function AddProduct() {
       title: "",
       message: "",
     });
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFiles = e.target.files;
+
+    // Limit the number of selected files to 5
+    const selectedFilesArray = Array.from(selectedFiles).slice(0, 5);
+
+    // Convert each file to an object with additional properties if needed
+    const photoObjects = selectedFilesArray.map((file) => ({
+      file,
+      // You can add more properties here, such as a caption or other metadata
+    }));
+
+    setPhotos((prevPhotos) => [...prevPhotos, ...photoObjects]);
+  };
+
+  const handleRemovePhoto = (index) => {
+    // Rimuovi la foto corrispondente all'indice dall'array
+    const updatedPhotos = [...photos];
+    updatedPhotos.splice(index, 1);
+    setPhotos(updatedPhotos);
   };
   return (
     <>
@@ -140,7 +192,7 @@ export default function AddProduct() {
                       placeholder="Nome prodotto"
                       size="sm"
                       radius="sm"
-                      className="w-1/2"
+                      className="lg:w-1/2"
                       onChange={handleProductName}
                     />
                   </div>
@@ -153,7 +205,7 @@ export default function AddProduct() {
                   >
                     Descrizione
                   </label>
-                  <div className="mt-2 h-auto sm:col-span-2 sm:mt-0">
+                  <div className="mt-2 h-auto sm:col-span-1 sm:mt-0">
                     <ReactQuill
                       className="h-1/2"
                       theme="snow"
@@ -184,7 +236,7 @@ export default function AddProduct() {
                       placeholder="0"
                       size="sm"
                       radius="sm"
-                      className="w-1/2"
+                      className="lg:w-1/2"
                       endContent="Pz."
                       onChange={handleProductAmount}
                     />
@@ -202,7 +254,7 @@ export default function AddProduct() {
                       placeholder="0.00"
                       size="sm"
                       radius="sm"
-                      className="w-1/2"
+                      className="lg:w-1/2"
                       endContent="€"
                       onChange={handleUnitPrice}
                     />
@@ -211,60 +263,63 @@ export default function AddProduct() {
 
                 <div className="sm:grid sm:grid-cols-3 sm:items-center sm:gap-4 sm:py-6">
                   <label
-                    htmlFor="photo"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
-                    Photo
-                  </label>
-                  <div className="mt-2 sm:col-span-2 sm:mt-0">
-                    <div className="flex items-center gap-x-3">
-                      <button
-                        type="button"
-                        className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                      >
-                        Change
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:py-6">
-                  <label
-                    htmlFor="cover-photo"
+                    htmlFor="first-name"
                     className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
                   >
-                    Cover photo
+                    Foto del prodotto
                   </label>
-                  <div className="mt-2 sm:col-span-2 sm:mt-0">
-                    <div className="flex max-w-2xl justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-                      <div className="text-center">
-                        <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                          <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                          >
-                            <span>Upload a file</span>
-                            <input
-                              id="file-upload"
-                              name="file-upload"
-                              type="file"
-                              className="sr-only"
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs leading-5 text-gray-600">
-                          PNG, JPG, GIF up to 10MB
-                        </p>
+                  <div className="flex flex-col gap-10">
+                    <Alert variant="outlined" severity="warning">
+                      Dimensioni consigliate per l'immagine: <br /> 500x500
+                      pixel.
+                    </Alert>
+                    {photos.map((photo, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-row gap-5 items-center"
+                      >
+                        <Avatar
+                          isBordered
+                          radius="sm"
+                          size="lg"
+                          src={URL.createObjectURL(photo.file)}
+                        />
+                        <Button
+                          isIconOnly
+                          className="bg-red-500 text-white"
+                          radius="sm"
+                          onClick={() => handleRemovePhoto(index)}
+                        >
+                          <DeleteRoundedIcon />{" "}
+                        </Button>
                       </div>
-                    </div>
+                    ))}
+
+                    {photos.length < 5 && (
+                      <label className="relative inline-flex justify-center items-center bg-primary dark:text-black text-white px-4 py-2 rounded-md cursor-pointer w-full">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e)}
+                          className="hidden"
+                          multiple
+                          ref={fileInputRef}
+                        />
+                        <FileUploadRoundedIcon />
+                        {photos.length === 0 ? (
+                          <span>Carica copertina</span>
+                        ) : (
+                          <span>Carica foto {photos.length + "/" + 5}</span>
+                        )}
+                      </label>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-end gap-x-6">
+          <div className="mt-6 flex items-center justify-center lg:justify-end gap-x-6">
             <button
               onClick={backToProducts}
               type="button"
@@ -272,7 +327,12 @@ export default function AddProduct() {
             >
               Cancella
             </button>
-            <Button color="primary" radius="sm" isDisabled={enableSubmit()}>
+            <Button
+              color="primary"
+              radius="sm"
+              isDisabled={enableSubmit()}
+              onClick={handleAddProduct}
+            >
               Aggiungi prodotto
             </Button>
           </div>

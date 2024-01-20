@@ -16,6 +16,7 @@ import {
   Link,
 } from "@nextui-org/react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 const columns = [
   { name: "ID", uid: "id", sortable: true },
@@ -208,6 +209,7 @@ export default function ProductTable() {
           <Button
             as={Link}
             href="/products/add-product"
+            startContent={<AddRoundedIcon />}
             color="primary"
             radius="sm"
           >

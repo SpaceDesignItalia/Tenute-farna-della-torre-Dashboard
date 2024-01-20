@@ -162,7 +162,7 @@ export default function FeaturedProductTable() {
             color="primary"
             radius="sm"
           >
-            Aggiungi prodotto in evidenza
+            Aggiungi in evidenza
           </Button>
         </div>
       </div>

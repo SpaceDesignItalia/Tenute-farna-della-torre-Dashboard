@@ -5,10 +5,12 @@ import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import DiscountOutlinedIcon from "@mui/icons-material/DiscountOutlined";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: DashboardOutlinedIcon },
   { name: "Prodotti", href: "/products", icon: Inventory2OutlinedIcon },
+  { name: "Sconti", href: "/discounts", icon: DiscountOutlinedIcon },
 ];
 
 function classNames(...classes) {

@@ -7,6 +7,8 @@ import Home from "./Pages/Home/Home";
 import Sidebar from "./Components/Layout/Sidebar";
 import ProductDashboard from "./Pages/Product/ProductDashboard";
 import AddProduct from "./Pages/Product/AddProduct";
+import AddDiscount from "./Pages/Discount/AddDiscount";
+import DiscountDashboard from "./Pages/Discount/DiscountDashboard";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(true);
@@ -62,6 +64,12 @@ export default function App() {
           <Route exact path="/" element={<Home />} />
           <Route exact path="/products" element={<ProductDashboard />} />
           <Route exact path="/products/add-product" element={<AddProduct />} />
+          <Route exact path="/discounts" element={<DiscountDashboard />} />
+          <Route
+            exact
+            path="/discounts/add-discount"
+            element={<AddDiscount />}
+          />
         </Route>
       </Routes>
     </>

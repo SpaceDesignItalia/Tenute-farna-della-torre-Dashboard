@@ -93,7 +93,7 @@ export default function Sidebar() {
                     </div>
                   </Transition.Child>
                   {/* Sidebar component, swap this element with another sidebar if you like */}
-                  <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4 ring-1 ring-white/10">
+                  <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4 ring-1 ring-white/10 bg-white">
                     <div className="flex h-16 shrink-0 items-center">
                       <img
                         className="h-8 w-auto"

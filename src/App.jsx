@@ -7,12 +7,9 @@ import Home from "./Pages/Home/Home";
 import Sidebar from "./Components/Layout/Sidebar";
 import ProductDashboard from "./Pages/Product/ProductDashboard";
 import AddProduct from "./Pages/Product/AddProduct";
-<<<<<<< HEAD
 import AddDiscount from "./Pages/Discount/AddDiscount";
 import DiscountDashboard from "./Pages/Discount/DiscountDashboard";
-=======
 import AddFeaturedProduct from "./Pages/Product/AddFeaturedProduct";
->>>>>>> 5c3db61776c21e1f5126c5dcf3cd32c42abf5666
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(true);
@@ -68,18 +65,16 @@ export default function App() {
           <Route exact path="/" element={<Home />} />
           <Route exact path="/products" element={<ProductDashboard />} />
           <Route exact path="/products/add-product" element={<AddProduct />} />
-<<<<<<< HEAD
           <Route exact path="/discounts" element={<DiscountDashboard />} />
           <Route
             exact
             path="/discounts/add-discount"
             element={<AddDiscount />}
-=======
+          />
           <Route
             exact
             path="/products/add-product-in-featured"
             element={<AddFeaturedProduct />}
->>>>>>> 5c3db61776c21e1f5126c5dcf3cd32c42abf5666
           />
         </Route>
       </Routes>

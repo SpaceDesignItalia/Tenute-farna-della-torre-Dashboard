@@ -45,21 +45,24 @@ export default function AddDiscount() {
   }
 
   function handlePercentValue(e) {
-    const value = e.target.value
-      .replace(/[^0-9,.]/g, "")
-      .replace(/(\..*)\./g, "$1");
+    let value = e.target.value.replace(/[^\d.,]/g, "");
+    value = value.replace(",", ".");
+
     const numericValue = parseFloat(value);
 
-    if (!isNaN(numericValue) && numericValue >= 0 && numericValue <= 100) {
+    if (
+      value === "" ||
+      (!isNaN(numericValue) && numericValue >= 0 && numericValue <= 100)
+    ) {
       setNewDiscount({ ...newDiscount, discountValue: value });
     }
   }
 
   function handleCurrencyValue(e) {
-    const value = e.target.value;
+    let value = e.target.value.replace(/[^\d.]/g, "");
     const numericValue = parseFloat(value);
 
-    if (!isNaN(numericValue) && numericValue >= 0) {
+    if (value === "" || (!isNaN(numericValue) && numericValue >= 0)) {
       setNewDiscount({ ...newDiscount, discountValue: value });
     }
   }
@@ -75,15 +78,31 @@ export default function AddDiscount() {
   }
 
   function enableSubmit() {
+    const {
+      discountCode,
+      discountType,
+      discountValue,
+      discountStart,
+      discountEnd,
+    } = newDiscount;
+
+    // Verifica se la data di inizio è compilata completamente e nel formato corretto (solo numeri)
+    const isStartDateComplete = /^\d{4}-\d{2}-\d{2}$/.test(discountStart);
+
+    // Verifica se la data di fine è compilata completamente (se presente) e nel formato corretto (solo numeri)
+    const isEndDateComplete =
+      !discountEnd || /^\d{4}-\d{2}-\d{2}$/.test(discountEnd);
+
     if (
-      newDiscount.discountCode !== "" &&
-      (newDiscount.discountType !== 1 || newDiscount.discountType !== 2) &&
-      newDiscount.discountValue !== "" &&
-      newDiscount.discountStart !== ""
+      discountCode !== "" &&
+      (discountType === 1 || discountType === 2) &&
+      discountValue !== "" &&
+      isStartDateComplete &&
+      isEndDateComplete
     ) {
-      return false;
+      return false; // Tutte le condizioni sono soddisfatte, quindi il submit è abilitato
     }
-    return true;
+    return true; // Almeno una delle condizioni non è soddisfatta, quindi il submit è disabilitato
   }
 
   function backToDiscounts() {

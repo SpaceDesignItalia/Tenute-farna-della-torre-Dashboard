@@ -5,6 +5,8 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
+import axios from "axios";
+import { API_URL } from "../../API/API";
 
 export default function AddProduct() {
   const [alertData, setAlertData] = useState({
@@ -16,9 +18,10 @@ export default function AddProduct() {
   const [newProduct, setNewProduct] = useState({
     productName: "",
     productDescription: "",
-    productAmount: 0,
-    unitPrice: 0,
+    productAmount: "",
+    unitPrice: "",
   });
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [photos, setPhotos] = useState([]);
   const fileInputRef = useRef(null);
 
@@ -57,26 +60,47 @@ export default function AddProduct() {
   };
 
   function handleProductAmount(e) {
-    // Rimuovi i caratteri non numerici dall'input
-    const inputValue = e.target.value.replace(/[^0-9]/g, "");
+    let value = e.target.value.replace(/[^\d]/g, ""); // Rimuovi tutti i caratteri non numerici
 
-    // Aggiorna lo stato in tempo reale solo se il valore è diverso
-    if (inputValue !== newProduct.productAmount) {
-      setNewProduct({ ...newProduct, productAmount: inputValue });
+    const numericValue = parseInt(value); // Converte il valore in un numero intero
+
+    // Se il valore è un numero intero positivo, aggiorna lo stato
+    if (!isNaN(numericValue) && numericValue >= 0) {
+      setNewProduct({ ...newProduct, productAmount: value });
     }
   }
 
   function handleUnitPrice(e) {
-    // Rimuovi i caratteri non numerici (e la virgola) dall'input, tranne l'ultima virgola
-    const inputValue = e.target.value
-      .replace(/[^0-9,.]/g, "")
-      .replace(/(\..*)\./g, "$1");
+    // Rimuovi i caratteri non numerici (e il punto) dall'input
+    let value = e.target.value.replace(/[^\d.]/g, "");
 
-    // Aggiorna lo stato in tempo reale solo se il valore è diverso
-    if (inputValue !== newProduct.unitPrice) {
-      setNewProduct({ ...newProduct, unitPrice: inputValue });
+    // Se il valore contiene solo numeri e al massimo un punto, aggiorna lo stato
+    if (/^\d*\.?\d*$/.test(value)) {
+      setNewProduct({ ...newProduct, unitPrice: value });
     }
   }
+
+  const handleKeyPress = (e) => {
+    // Permette solo i numeri e il tasto Backspace
+    const isValidKey = /^\d$/.test(e.key) || e.key === "Backspace";
+    if (!isValidKey) {
+      e.preventDefault();
+    }
+  };
+
+  const handleKeyPressPrice = (e) => {
+    const { value } = e.target;
+    // Controlla se il punto è già presente nella stringa
+    const hasDecimalPoint = value.includes(".");
+
+    // Permette solo i numeri, la virgola e il tasto Backspace
+    const isValidKey = /^[\d.]$/.test(e.key) || e.key === "Backspace";
+
+    // Consenti l'inserimento del punto solo se non è già presente nella stringa
+    if (!isValidKey || (e.key === "." && hasDecimalPoint)) {
+      e.preventDefault();
+    }
+  };
 
   function enableSubmit() {
     if (
@@ -104,7 +128,7 @@ export default function AddProduct() {
     }, 1000);
   }
 
-  function handleAddProduct() {
+  const handleAddProduct = async () => {
     // Imposta il titolo e il messaggio della notifica
     setAlertData({
       ...alertData,
@@ -115,18 +139,34 @@ export default function AddProduct() {
     });
 
     const formData = new FormData();
+
+    // Aggiungi i dati del nuovo prodotto
     formData.append("productName", newProduct.productName);
     formData.append("productDescription", newProduct.productDescription);
     formData.append("productAmount", newProduct.productAmount);
     formData.append("unitPrice", newProduct.unitPrice);
+    formData.append("isDiscount", newProduct.isDiscount);
+
+    // Aggiungi le immagini del prodotto
     photos.forEach((photo, index) => {
       formData.append(`photo${index + 1}`, photo.file);
     });
 
-    formData.forEach((value, key) => {
-      console.log(key + " " + value);
-    });
-  }
+    try {
+      const response = await axios.post(
+        API_URL + "/Products/CreateProduct",
+        formData
+      );
+      setIsAddingProduct(true);
+      if (response.status === 201) {
+        setTimeout(() => {
+          window.location.href = "/products";
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Errore durante l'aggiunta del prodotto", error);
+    }
+  };
 
   const handleClose = (event, reason) => {
     setAlertData({
@@ -239,6 +279,7 @@ export default function AddProduct() {
                       className="lg:w-1/2"
                       endContent="Pz."
                       onChange={handleProductAmount}
+                      onKeyPress={handleKeyPress}
                     />
                   </div>
 
@@ -250,6 +291,7 @@ export default function AddProduct() {
                   </label>
                   <div className="mt-2 sm:col-span-2 sm:mt-0">
                     <Input
+                      type="text"
                       variant="bordered"
                       placeholder="0.00"
                       size="sm"
@@ -257,6 +299,7 @@ export default function AddProduct() {
                       className="lg:w-1/2"
                       endContent="€"
                       onChange={handleUnitPrice}
+                      onKeyPress={handleKeyPressPrice}
                     />
                   </div>
                 </div>
@@ -330,10 +373,11 @@ export default function AddProduct() {
             <Button
               color="primary"
               radius="sm"
-              isDisabled={enableSubmit()}
+              isDisabled={enableSubmit() || isAddingProduct} // Disabilita il pulsante quando è in corso l'aggiunta del prodotto
               onClick={handleAddProduct}
+              isLoading={isAddingProduct}
             >
-              Aggiungi prodotto
+              {isAddingProduct ? "Aggiungendo..." : "Aggiungi prodotto"}{" "}
             </Button>
           </div>
         </form>

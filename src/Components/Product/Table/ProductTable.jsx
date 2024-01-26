@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -17,65 +17,17 @@ import {
 } from "@nextui-org/react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { API_URL } from "../../../API/API";
+import axios from "axios";
 
 const columns = [
   { name: "ID", uid: "id", sortable: true },
   { name: "Prodotto", uid: "productName", sortable: true },
-  { name: "Quantita' in magazzino", uid: "productAmount", sortable: true },
+  { name: "Quantità in magazzino", uid: "productAmount", sortable: true },
   { name: "Prezzo (€)", uid: "unitPrice", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
 
-const products = [
-  {
-    id: 1,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 2,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-  {
-    id: 3,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 4,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-  {
-    id: 5,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 6,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-  {
-    id: 7,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 8,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-];
 const INITIAL_VISIBLE_COLUMNS = [
   "id",
   "productName",
@@ -85,17 +37,26 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 export default function ProductTable() {
+  const [products, setProducts] = useState([]);
   const [filterValue, setFilterValue] = React.useState("");
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = React.useState("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [sortDescriptor, setSortDescriptor] = React.useState({
+  const [statusFilter, setStatusFilter] = useState("all");
+  const rowsPerPage = 5;
+  const [sortDescriptor, setSortDescriptor] = useState({
     column: "age",
     direction: "ascending",
   });
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    axios.get(API_URL + "/Products/GetAll").then((res) => {
+      setProducts(res.data);
+      // Imposta la pagina su 1 dopo aver recuperato i dati
+      setPage(1);
+    });
+  }, []);
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -143,7 +104,7 @@ export default function ProductTable() {
 
     switch (columnKey) {
       case "id":
-        return <div>{product.id}</div>;
+        return <div>{product.idProduct}</div>;
       case "productName":
         return <div>{product.productName}</div>;
       case "productAmount":
@@ -172,25 +133,6 @@ export default function ProductTable() {
     }
   }, []);
 
-  const onRowsPerPageChange = React.useCallback((e) => {
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }, []);
-
-  const onSearchChange = React.useCallback((value) => {
-    if (value) {
-      setFilterValue(value);
-      setPage(1);
-    } else {
-      setFilterValue("");
-    }
-  }, []);
-
-  const onClear = React.useCallback(() => {
-    setFilterValue("");
-    setPage(1);
-  }, []);
-
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
@@ -204,7 +146,6 @@ export default function ProductTable() {
             startContent={<SearchRoundedIcon />}
             value={filterValue}
             onClear={() => onClear()}
-            onValueChange={onSearchChange}
           />
           <Button
             as={Link}
@@ -222,9 +163,7 @@ export default function ProductTable() {
     filterValue,
     statusFilter,
     visibleColumns,
-    onRowsPerPageChange,
     products.length,
-    onSearchChange,
     hasSearchFilter,
   ]);
 
@@ -236,8 +175,8 @@ export default function ProductTable() {
           showControls
           showShadow
           color="primary"
-          page={page}
-          total={pages}
+          initialPage={page}
+          total={pages || 1}
           onChange={setPage}
         />
       </div>
@@ -269,9 +208,12 @@ export default function ProductTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
+      <TableBody
+        emptyContent={"Nessun prodotto presente in magazzino"}
+        items={sortedItems}
+      >
         {(item) => (
-          <TableRow key={item.id}>
+          <TableRow key={item.idProduct}>
             {(columnKey) => (
               <TableCell>{renderCell(item, columnKey)}</TableCell>
             )}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -17,6 +17,8 @@ import {
 } from "@nextui-org/react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { API_URL } from "../../../API/API";
+import axios from "axios";
 
 const columns = [
   { name: "ID", uid: "id", sortable: true },
@@ -26,20 +28,6 @@ const columns = [
   { name: "Opzioni", uid: "actions" },
 ];
 
-const products = [
-  {
-    id: 1,
-    productName: "Prodotto 1",
-    productAmount: "120",
-    unitPrice: "20.00",
-  },
-  {
-    id: 2,
-    productName: "Prodotto 2",
-    productAmount: "100",
-    unitPrice: "20.00",
-  },
-];
 const INITIAL_VISIBLE_COLUMNS = [
   "id",
   "productName",
@@ -49,19 +37,46 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 export default function FeaturedProductTable() {
-  const [filterValue, setFilterValue] = React.useState("");
+  const [products, setProducts] = useState([]);
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = React.useState("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [sortDescriptor, setSortDescriptor] = React.useState({
+  const [statusFilter, setStatusFilter] = useState("all");
+  const rowsPerPage = 5;
+  const [sortDescriptor, setSortDescriptor] = useState({
     column: "age",
     direction: "ascending",
   });
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useState(1);
 
-  const hasSearchFilter = Boolean(filterValue);
+  useEffect(() => {
+    axios.get(API_URL + "/Featured/GetAll").then((res) => {
+      setProducts(res.data);
+      console.log(res.data);
+      // Imposta la pagina su 1 dopo aver recuperato i dati
+      setPage(1);
+    });
+  }, []);
+
+  function searchProduct(e) {
+    const filterValue = e;
+
+    if (filterValue === "") {
+      // Se il valore di ricerca è vuoto, carica nuovamente tutti i prodotti
+      axios.get(API_URL + "/Featured/GetAll").then((res) => {
+        setProducts(res.data);
+      });
+    } else {
+      axios
+        .get(API_URL + `/Featured/GetProductByName/${filterValue}`)
+        .then((res) => {
+          setProducts(res.data);
+        })
+        .catch((err) => {
+          setProducts([]);
+        });
+    }
+  }
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -71,26 +86,14 @@ export default function FeaturedProductTable() {
     );
   }, [visibleColumns]);
 
-  const filteredItems = React.useMemo(() => {
-    let filteredProducts = [...products];
-
-    if (hasSearchFilter) {
-      filteredProducts = filteredProducts.filter((product) =>
-        product.name.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-
-    return filteredProducts;
-  }, [products, filterValue, statusFilter]);
-
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = Math.ceil(products.length / rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+    return products.slice(start, end);
+  }, [page, products, rowsPerPage]);
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
@@ -107,13 +110,13 @@ export default function FeaturedProductTable() {
 
     switch (columnKey) {
       case "id":
-        return <div>{product.id}</div>;
+        return <div>{product.idProduct}</div>;
       case "productName":
         return <div>{product.productName}</div>;
       case "productAmount":
         return <div>{product.productAmount}</div>;
       case "unitPrice":
-        return <div>€ {product.unitPrice}</div>;
+        return <div>€ {product.unitPrice.toFixed(2)}</div>;
       case "actions":
         return <div>Rimuovi</div>;
       default:
@@ -151,7 +154,6 @@ export default function FeaturedProductTable() {
             variant="bordered"
             size="sm"
             startContent={<SearchRoundedIcon />}
-            value={filterValue}
             onClear={() => onClear()}
             onValueChange={onSearchChange}
           />
@@ -168,13 +170,11 @@ export default function FeaturedProductTable() {
       </div>
     );
   }, [
-    filterValue,
     statusFilter,
     visibleColumns,
     onRowsPerPageChange,
     products.length,
     onSearchChange,
-    hasSearchFilter,
   ]);
 
   const bottomContent = React.useMemo(() => {
@@ -186,12 +186,12 @@ export default function FeaturedProductTable() {
           showShadow
           color="primary"
           page={page}
-          total={pages}
+          total={pages || 1}
           onChange={setPage}
         />
       </div>
     );
-  }, [page, pages, hasSearchFilter]);
+  }, [page, pages]);
 
   return (
     <Table
@@ -218,9 +218,12 @@ export default function FeaturedProductTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
+      <TableBody
+        emptyContent={"Nessun prodotto in evidenza trovato"}
+        items={sortedItems}
+      >
         {(item) => (
-          <TableRow key={item.id}>
+          <TableRow key={item.idProduct}>
             {(columnKey) => (
               <TableCell>{renderCell(item, columnKey)}</TableCell>
             )}

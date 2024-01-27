@@ -115,7 +115,7 @@ export default function ProductTable() {
       case "productAmount":
         return <div>{product.productAmount}</div>;
       case "unitPrice":
-        return <div>€ {product.unitPrice}</div>;
+        return <div>€ {product.unitPrice.toFixed(2)}</div>;
       case "actions":
         return (
           <div className="relative flex justify-end items-center gap-2">

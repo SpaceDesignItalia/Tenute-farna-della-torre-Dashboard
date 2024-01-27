@@ -38,7 +38,6 @@ const INITIAL_VISIBLE_COLUMNS = [
 
 export default function ProductTable() {
   const [products, setProducts] = useState([]);
-  const [filterValue, setFilterValue] = React.useState("");
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
@@ -58,7 +57,25 @@ export default function ProductTable() {
     });
   }, []);
 
-  const hasSearchFilter = Boolean(filterValue);
+  function searchProduct(e) {
+    const filterValue = e;
+
+    if (filterValue === "") {
+      // Se il valore di ricerca è vuoto, carica nuovamente tutti i prodotti
+      axios.get(API_URL + "/Products/GetAll").then((res) => {
+        setProducts(res.data);
+      });
+    } else {
+      axios
+        .get(API_URL + `/Products/GetProductByName/${filterValue}`)
+        .then((res) => {
+          setProducts(res.data);
+        })
+        .catch((err) => {
+          setProducts([]);
+        });
+    }
+  }
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -68,26 +85,14 @@ export default function ProductTable() {
     );
   }, [visibleColumns]);
 
-  const filteredItems = React.useMemo(() => {
-    let filteredProducts = [...products];
-
-    if (hasSearchFilter) {
-      filteredProducts = filteredProducts.filter((product) =>
-        product.name.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-
-    return filteredProducts;
-  }, [products, filterValue, statusFilter]);
-
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = Math.ceil(products.length / rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+    return products.slice(start, end);
+  }, [page, products, rowsPerPage]);
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
@@ -138,14 +143,12 @@ export default function ProductTable() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col lg:flex-row justify-between gap-3 lg:items-end">
           <Input
-            isClearable
             className="lg:w-1/3"
             placeholder="Cerca per nome prodotto"
             variant="bordered"
             size="sm"
             startContent={<SearchRoundedIcon />}
-            value={filterValue}
-            onClear={() => onClear()}
+            onChange={(e) => searchProduct(e.target.value)}
           />
           <Button
             as={Link}
@@ -159,13 +162,7 @@ export default function ProductTable() {
         </div>
       </div>
     );
-  }, [
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    products.length,
-    hasSearchFilter,
-  ]);
+  }, [statusFilter, visibleColumns, products.length]);
 
   const bottomContent = React.useMemo(() => {
     return (
@@ -181,7 +178,7 @@ export default function ProductTable() {
         />
       </div>
     );
-  }, [page, pages, hasSearchFilter]);
+  }, [page, pages]);
 
   return (
     <Table

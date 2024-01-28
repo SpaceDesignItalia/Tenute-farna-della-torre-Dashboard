@@ -8,7 +8,7 @@ import {
   TableCell,
   Input,
   Button,
-  CircularProgress,
+  Spinner,
   Pagination,
   Link,
 } from "@nextui-org/react";
@@ -20,7 +20,6 @@ import { API_URL } from "../../../API/API";
 import axios from "axios";
 
 const columns = [
-  { name: "ID", uid: "id", sortable: true },
   { name: "Prodotto", uid: "productName", sortable: true },
   { name: "Quantità in magazzino", uid: "productAmount", sortable: true },
   { name: "Prezzo (€)", uid: "unitPrice", sortable: true },
@@ -28,7 +27,6 @@ const columns = [
 ];
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "id",
   "productName",
   "productAmount",
   "unitPrice",
@@ -92,10 +90,11 @@ export default function FeaturedProductTable() {
         title: "Prodotto rimosso",
         message: "Il prodotto è stato rimosso con successo dagli in evidenza",
       });
-      console.log(res.status);
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
+      if (res.status === 200) {
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      }
     });
   }
 
@@ -140,8 +139,6 @@ export default function FeaturedProductTable() {
     const cellValue = product[columnKey];
 
     switch (columnKey) {
-      case "id":
-        return <div>{product.idProduct}</div>;
       case "productName":
         return <div>{product.productName}</div>;
       case "productAmount":
@@ -251,7 +248,7 @@ export default function FeaturedProductTable() {
           open={open}
           onClick={handleClose}
         >
-          <CircularProgress color="primary" />
+          <Spinner color="primary" size="lg" />
         </Backdrop>
       )}
 

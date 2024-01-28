@@ -10,6 +10,7 @@ import AddProduct from "./Pages/Product/AddProduct";
 import AddDiscount from "./Pages/Discount/AddDiscount";
 import DiscountDashboard from "./Pages/Discount/DiscountDashboard";
 import AddFeaturedProduct from "./Pages/Product/AddFeaturedProduct";
+import VisualizeProduct from "./Pages/Product/VisualizeProduct";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(true);
@@ -65,16 +66,21 @@ export default function App() {
           <Route exact path="/" element={<Home />} />
           <Route exact path="/products" element={<ProductDashboard />} />
           <Route exact path="/products/add-product" element={<AddProduct />} />
-          <Route exact path="/discounts" element={<DiscountDashboard />} />
           <Route
             exact
-            path="/discounts/add-discount"
-            element={<AddDiscount />}
+            path="/products/visualize-product/:id/:name"
+            element={<VisualizeProduct />}
           />
           <Route
             exact
             path="/products/add-product-in-featured"
             element={<AddFeaturedProduct />}
+          />
+          <Route exact path="/discounts" element={<DiscountDashboard />} />
+          <Route
+            exact
+            path="/discounts/add-discount"
+            element={<AddDiscount />}
           />
         </Route>
       </Routes>

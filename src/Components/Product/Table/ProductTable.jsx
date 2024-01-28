@@ -13,11 +13,16 @@ import {
   DropdownMenu,
   DropdownItem,
   Pagination,
+  Spinner,
   Link,
 } from "@nextui-org/react";
+import { AlertTitle, Alert, Snackbar, Backdrop } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { API_URL } from "../../../API/API";
 import axios from "axios";
 
@@ -48,6 +53,12 @@ export default function ProductTable() {
     column: "age",
     direction: "ascending",
   });
+  const [alertData, setAlertData] = useState({
+    isOpen: false,
+    variant: "",
+    title: "",
+    message: "",
+  });
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -77,6 +88,34 @@ export default function ProductTable() {
         });
     }
   }
+
+  function deleteProduct(id) {
+    axios.delete(API_URL + `/Products/DeleteProduct/${id}`).then((res) => {
+      setAlertData({
+        ...alertData,
+        isOpen: true,
+        variant: "success",
+        title: "Prodotto rimosso",
+        message: "Il prodotto è stato rimosso con successo dal magazzino!",
+      });
+
+      if (res.status === 200) {
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      }
+    });
+  }
+
+  const handleClose = (event, reason) => {
+    setAlertData({
+      ...alertData,
+      isOpen: false,
+      variant: "",
+      title: "",
+      message: "",
+    });
+  };
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -119,16 +158,28 @@ export default function ProductTable() {
         return <div>€ {product.unitPrice.toFixed(2)}</div>;
       case "actions":
         return (
-          <Dropdown>
+          <Dropdown radius="sm">
             <DropdownTrigger>
               <Button isIconOnly size="sm" variant="light">
                 <MoreVertIcon />
               </Button>
             </DropdownTrigger>
             <DropdownMenu>
-              <DropdownItem>Visualizza</DropdownItem>
-              <DropdownItem>Modifica</DropdownItem>
-              <DropdownItem className="text-danger" color="danger">
+              <DropdownItem
+                startContent={<RemoveRedEyeOutlinedIcon />}
+                href={`/products/visualize-product/${product.idProduct}/${product.productName}`}
+              >
+                Visualizza
+              </DropdownItem>
+              <DropdownItem startContent={<EditOutlinedIcon />}>
+                Modifica
+              </DropdownItem>
+              <DropdownItem
+                className="text-danger"
+                color="danger"
+                onClick={() => deleteProduct(product.idProduct)}
+                startContent={<DeleteOutlineRoundedIcon />}
+              >
                 Rimuovi
               </DropdownItem>
             </DropdownMenu>
@@ -182,42 +233,66 @@ export default function ProductTable() {
   }, [page, pages]);
 
   return (
-    <Table
-      aria-label="Example table with custom cells, pagination and sorting"
-      isStriped
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      classNames={{
-        wrapper: "max-h-[382px]",
-      }}
-      sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSortChange={setSortDescriptor}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody
-        emptyContent={"Nessun prodotto presente in magazzino"}
-        items={sortedItems}
+    <>
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        open={alertData.isOpen}
+        autoHideDuration={3000}
+        onClose={handleClose}
       >
-        {(item) => (
-          <TableRow key={item.idProduct}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+        <Alert size="lg" severity={alertData.variant} sx={{ width: "100%" }}>
+          <AlertTitle sx={{ fontWeight: "bold" }}>{alertData.title}</AlertTitle>
+          {alertData.message}
+        </Alert>
+      </Snackbar>
+
+      {alertData.isOpen && (
+        <Backdrop
+          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={open}
+          onClick={handleClose}
+        >
+          <Spinner color="primary" size="lg" />
+        </Backdrop>
+      )}
+
+      <Table
+        aria-label="Example table with custom cells, pagination and sorting"
+        isStriped
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[382px]",
+        }}
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSortChange={setSortDescriptor}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody
+          emptyContent={"Nessun prodotto presente in magazzino"}
+          items={sortedItems}
+        >
+          {(item) => (
+            <TableRow key={item.idProduct}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </>
   );
 }

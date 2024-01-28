@@ -18,7 +18,11 @@ const navigation = [
     name: "Prodotti",
     href: "/products",
     icon: Inventory2OutlinedIcon,
-    subRoutes: ["/products/add-product", "/products/add-product-in-featured"], // Esempio di sottoroute
+    subRoutes: [
+      "/products/add-product",
+      "/products/visualize-product/",
+      "/products/add-product-in-featured",
+    ], // Esempio di sottoroute
   },
   {
     name: "Sconti",
@@ -27,6 +31,22 @@ const navigation = [
     subRoutes: ["/discounts/add-discount"], // Aggiungi le sottoroute qui se necessario
   },
 ];
+
+function isSubRoute(currentUrl, parentRoutes) {
+  return parentRoutes.some((parentRoute) => {
+    // Controlla se l'URL attuale corrisponde al percorso principale
+    if (currentUrl === parentRoute.href) {
+      return true;
+    }
+    // Controlla se l'URL attuale è una sottoroute del percorso principale
+    if (parentRoute.subRoutes && parentRoute.subRoutes.length > 0) {
+      return parentRoute.subRoutes.some((subRoute) =>
+        currentUrl.startsWith(subRoute)
+      );
+    }
+    return false;
+  });
+}
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -130,9 +150,8 @@ export default function Sidebar() {
                                 <a
                                   href={item.href}
                                   className={classNames(
-                                    currentUrl === item.href ||
-                                      (item.subRoutes &&
-                                        item.subRoutes.includes(currentUrl))
+                                    isSubRoute(currentUrl, [item]) ||
+                                      currentUrl === item.href // Verifica se è una sottoroute del percorso principale
                                       ? "bg-gray-100 text-primary font-bold"
                                       : "text-gray-700 hover:text-primary hover:bg-gray-100",
                                     "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
@@ -185,9 +204,8 @@ export default function Sidebar() {
                         <a
                           href={item.href}
                           className={classNames(
-                            currentUrl === item.href ||
-                              (item.subRoutes &&
-                                item.subRoutes.includes(currentUrl))
+                            isSubRoute(currentUrl, [item]) ||
+                              currentUrl === item.href
                               ? "bg-gray-100 text-primary font-bold"
                               : "text-gray-700 hover:text-primary hover:bg-gray-100",
                             "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"

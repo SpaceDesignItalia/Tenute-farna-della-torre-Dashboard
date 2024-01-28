@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Button, Input, Avatar } from "@nextui-org/react";
+import { Button, Input, Image } from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -321,10 +321,12 @@ export default function AddProduct() {
                         key={index}
                         className="flex flex-row gap-5 items-center"
                       >
-                        <Avatar
+                        <Image
                           isBordered
                           radius="sm"
                           size="lg"
+                          width={200}
+                          height={200}
                           src={URL.createObjectURL(photo.file)}
                         />
                         <Button

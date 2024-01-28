@@ -17,6 +17,7 @@ import {
 } from "@nextui-org/react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { API_URL } from "../../../API/API";
 import axios from "axios";
 
@@ -118,20 +119,20 @@ export default function ProductTable() {
         return <div>€ {product.unitPrice.toFixed(2)}</div>;
       case "actions":
         return (
-          <div className="relative flex justify-end items-center gap-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly size="sm" variant="light">
-                  Opt
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                <DropdownItem>View</DropdownItem>
-                <DropdownItem>Edit</DropdownItem>
-                <DropdownItem>Delete</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button isIconOnly size="sm" variant="light">
+                <MoreVertIcon />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu>
+              <DropdownItem>Visualizza</DropdownItem>
+              <DropdownItem>Modifica</DropdownItem>
+              <DropdownItem className="text-danger" color="danger">
+                Rimuovi
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         );
       default:
         return cellValue;

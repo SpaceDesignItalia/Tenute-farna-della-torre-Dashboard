@@ -8,22 +8,21 @@ import {
   TableCell,
   Input,
   Button,
-  DropdownTrigger,
-  Dropdown,
-  DropdownMenu,
-  DropdownItem,
+  CircularProgress,
   Pagination,
   Link,
 } from "@nextui-org/react";
+import { AlertTitle, Alert, Snackbar, Backdrop } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { API_URL } from "../../../API/API";
 import axios from "axios";
 
 const columns = [
   { name: "ID", uid: "id", sortable: true },
   { name: "Prodotto", uid: "productName", sortable: true },
-  { name: "Quantita' in magazzino", uid: "productAmount", sortable: true },
+  { name: "Quantità in magazzino", uid: "productAmount", sortable: true },
   { name: "Prezzo (€)", uid: "unitPrice", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
@@ -47,12 +46,18 @@ export default function FeaturedProductTable() {
     column: "age",
     direction: "ascending",
   });
+  const [alertData, setAlertData] = useState({
+    isOpen: false,
+    variant: "",
+    title: "",
+    message: "",
+  });
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     axios.get(API_URL + "/Featured/GetAll").then((res) => {
       setProducts(res.data);
-      console.log(res.data);
+
       // Imposta la pagina su 1 dopo aver recuperato i dati
       setPage(1);
     });
@@ -77,6 +82,32 @@ export default function FeaturedProductTable() {
         });
     }
   }
+
+  function deleteProduct(id) {
+    axios.delete(API_URL + `/Featured/DeleteFeatured/${id}`).then((res) => {
+      setAlertData({
+        ...alertData,
+        isOpen: true,
+        variant: "success",
+        title: "Prodotto rimosso",
+        message: "Il prodotto è stato rimosso con successo dagli in evidenza",
+      });
+      console.log(res.status);
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    });
+  }
+
+  const handleClose = (event, reason) => {
+    setAlertData({
+      ...alertData,
+      isOpen: false,
+      variant: "",
+      title: "",
+      message: "",
+    });
+  };
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -118,7 +149,16 @@ export default function FeaturedProductTable() {
       case "unitPrice":
         return <div>€ {product.unitPrice.toFixed(2)}</div>;
       case "actions":
-        return <div>Rimuovi</div>;
+        return (
+          <Button
+            startContent={<DeleteOutlineRoundedIcon />}
+            color="danger"
+            radius="sm"
+            onClick={() => deleteProduct(product.idProduct)}
+          >
+            Rimuovi
+          </Button>
+        );
       default:
         return cellValue;
     }
@@ -148,14 +188,12 @@ export default function FeaturedProductTable() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col lg:flex-row justify-between gap-3 lg:items-end">
           <Input
-            isClearable
             className="lg:w-1/3"
             placeholder="Cerca per nome prodotto"
             variant="bordered"
             size="sm"
             startContent={<SearchRoundedIcon />}
-            onClear={() => onClear()}
-            onValueChange={onSearchChange}
+            onChange={(e) => searchProduct(e.target.value)}
           />
           <Button
             as={Link}
@@ -194,42 +232,66 @@ export default function FeaturedProductTable() {
   }, [page, pages]);
 
   return (
-    <Table
-      aria-label="Example table with custom cells, pagination and sorting"
-      isStriped
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      classNames={{
-        wrapper: "max-h-[382px]",
-      }}
-      sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSortChange={setSortDescriptor}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody
-        emptyContent={"Nessun prodotto in evidenza trovato"}
-        items={sortedItems}
+    <>
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        open={alertData.isOpen}
+        autoHideDuration={3000}
+        onClose={handleClose}
       >
-        {(item) => (
-          <TableRow key={item.idProduct}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+        <Alert size="lg" severity={alertData.variant} sx={{ width: "100%" }}>
+          <AlertTitle sx={{ fontWeight: "bold" }}>{alertData.title}</AlertTitle>
+          {alertData.message}
+        </Alert>
+      </Snackbar>
+
+      {alertData.isOpen && (
+        <Backdrop
+          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={open}
+          onClick={handleClose}
+        >
+          <CircularProgress color="primary" />
+        </Backdrop>
+      )}
+
+      <Table
+        aria-label="Example table with custom cells, pagination and sorting"
+        isStriped
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[382px]",
+        }}
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSortChange={setSortDescriptor}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody
+          emptyContent={"Nessun prodotto in evidenza trovato"}
+          items={sortedItems}
+        >
+          {(item) => (
+            <TableRow key={item.idProduct}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </>
   );
 }

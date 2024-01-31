@@ -244,7 +244,10 @@ export default function FeaturedProductTable() {
 
       {alertData.isOpen && (
         <Backdrop
-          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          sx={{
+            backdropFilter: "blur(5px)",
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+          }}
           open={open}
           onClick={handleClose}
         >

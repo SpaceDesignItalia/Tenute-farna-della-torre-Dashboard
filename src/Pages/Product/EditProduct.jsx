@@ -1,55 +1,78 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button, Input, Image } from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../../API/API";
 
-export default function AddProduct() {
+const modules = {
+  toolbar: [["bold", "italic", "underline", "strike", "blockquote"], ["link"]],
+};
+
+const formats = [
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "blockquote",
+  "bullet",
+  "indent",
+  "link",
+  "image",
+];
+export default function EditProduct() {
+  const { id, name } = useParams();
+  const [product, setProduct] = useState({
+    productName: "",
+    productDescription: "",
+    productAmount: "",
+    unitPrice: "",
+  });
+  const [initialProduct, setInitialProduct] = useState({});
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [photo, setPhoto] = useState([]);
+  const fileInputRef = useRef(null);
   const [alertData, setAlertData] = useState({
     isOpen: false,
     variant: "",
     title: "",
     message: "",
   });
-  const [newProduct, setNewProduct] = useState({
-    productName: "",
-    productDescription: "",
-    productAmount: "",
-    unitPrice: "",
-  });
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
-  const [photos, setPhotos] = useState([]);
-  const fileInputRef = useRef(null);
 
-  const modules = {
-    toolbar: [
-      ["bold", "italic", "underline", "strike", "blockquote"],
-      ["link"],
-    ],
-  };
-
-  const formats = [
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "bullet",
-    "indent",
-    "link",
-    "image",
-  ];
+  useEffect(() => {
+    // Fetch existing product details and photos
+    axios
+      .get(API_URL + "/Products/GetProductByNameAndId/" + id + "/" + name)
+      .then((res) => {
+        const initialProductData = res.data[0];
+        setProduct({
+          productName: initialProductData.productName,
+          productDescription: initialProductData.productDescription,
+          productAmount: initialProductData.productAmount,
+          unitPrice: initialProductData.unitPrice,
+        });
+        setInitialProduct({
+          productName: initialProductData.productName,
+          productDescription: initialProductData.productDescription,
+          productAmount: initialProductData.productAmount,
+          unitPrice: initialProductData.unitPrice,
+        });
+      });
+    axios.get(API_URL + "/Products/GetProductImagesById/" + id).then((res) => {
+      setPhoto(res.data);
+    });
+  }, []);
 
   function handleProductName(e) {
-    setNewProduct({ ...newProduct, productName: e.target.value });
+    setProduct({ ...product, productName: e.target.value });
   }
 
   const handleProductDescription = (text) => {
-    setNewProduct({ ...newProduct, productDescription: text });
+    setProduct({ ...product, productDescription: text });
   };
 
   function handleProductAmount(e) {
@@ -59,7 +82,7 @@ export default function AddProduct() {
 
     // Se il valore è un numero intero positivo, aggiorna lo stato
     if (!isNaN(numericValue) && numericValue >= 0) {
-      setNewProduct({ ...newProduct, productAmount: value });
+      setProduct({ ...product, productAmount: value });
     }
   }
 
@@ -69,9 +92,34 @@ export default function AddProduct() {
 
     // Se il valore contiene solo numeri e al massimo un punto, aggiorna lo stato
     if (/^\d*\.?\d*$/.test(value)) {
-      setNewProduct({ ...newProduct, unitPrice: value });
+      setProduct({ ...product, unitPrice: value });
     }
   }
+
+  // Function to handle removal of existing photo
+
+  const handleRemovePhoto = (index) => {
+    // Rimuovi la foto corrispondente all'indice dall'array
+    const updatedPhotos = [...photo];
+    updatedPhotos.splice(index, 1);
+    setPhoto(updatedPhotos);
+  };
+
+  // Function to handle file selection for new photos
+  const handleFileChange = (e) => {
+    const selectedFiles = e.target.files;
+
+    // Limit the number of selected files to 5
+    const selectedFilesArray = Array.from(selectedFiles).slice(0, 5);
+
+    // Convert each file to an object with additional properties if needed
+    const photoObjects = selectedFilesArray.map((file) => ({
+      file,
+      // You can add more properties here, such as a caption or other metadata
+    }));
+
+    setPhoto((prevPhotos) => [...prevPhotos, ...photoObjects]);
+  };
 
   const handleKeyPress = (e) => {
     // Permette solo i numeri e il tasto Backspace
@@ -95,19 +143,6 @@ export default function AddProduct() {
     }
   };
 
-  function enableSubmit() {
-    if (
-      newProduct.productName !== "" &&
-      newProduct.productDescription !== "" &&
-      newProduct.productAmount !== 0 &&
-      newProduct.unitPrice !== 0 &&
-      photos.length !== 0
-    ) {
-      return false;
-    }
-    return true;
-  }
-
   function backToProducts() {
     setAlertData({
       ...alertData,
@@ -121,44 +156,67 @@ export default function AddProduct() {
     }, 1000);
   }
 
-  const handleAddProduct = async () => {
-    // Imposta il titolo e il messaggio della notifica
-    setAlertData({
-      ...alertData,
-      isOpen: true,
-      variant: "success",
-      title: "Prodotto aggiunto",
-      message: "Il prodotto è stato aggiunto con successo",
-    });
+  function enableSubmit() {
+    if (
+      product.productName === initialProduct.productName &&
+      product.productDescription === initialProduct.productDescription &&
+      product.productAmount === initialProduct.productAmount &&
+      product.unitPrice === initialProduct.unitPrice &&
+      photo.length === 0
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  // Function to handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmedProductName = product.productName.trim();
 
-    const trimmedProductName = newProduct.productName.trim();
     const formData = new FormData();
-
-    // Aggiungi i dati del nuovo prodotto
     formData.append("productName", trimmedProductName);
-    formData.append("productDescription", newProduct.productDescription);
-    formData.append("productAmount", newProduct.productAmount);
-    formData.append("unitPrice", newProduct.unitPrice);
-    formData.append("isDiscount", newProduct.isDiscount);
+    formData.append("productDescription", product.productDescription);
+    formData.append("productAmount", product.productAmount);
+    formData.append("unitPrice", product.unitPrice);
 
-    // Aggiungi le immagini del prodotto
-    photos.forEach((photo, index) => {
-      formData.append(`photo${index + 1}`, photo.file);
+    // Add existing photos
+    photo.forEach((photo) => {
+      formData.append("oldPhotos", photo.productImagePath);
+    });
+    photo.forEach((photo) => {
+      formData.append("photos", photo.file);
     });
 
     try {
-      const response = await axios.post(
-        API_URL + "/Products/CreateProduct",
+      const response = await axios.put(
+        API_URL + "/Products/EditProduct/" + id,
         formData
       );
       setIsAddingProduct(true);
-      if (response.status === 201) {
+
+      if (response.status === 200) {
+        setAlertData({
+          ...alertData,
+          isOpen: true,
+          variant: "success",
+          title: "Prodotto modificato",
+          message: "Il prodotto è stato modificato con successo",
+        });
         setTimeout(() => {
           window.location.href = "/products";
         }, 1000);
       }
     } catch (error) {
-      console.error("Errore durante l'aggiunta del prodotto", error);
+      setIsAddingProduct(false);
+      console.error(error);
+      setAlertData({
+        ...alertData,
+        isOpen: true,
+        variant: "error",
+        title: "Errore",
+        message: "Si è verificato un errore durante la modifica del prodotto",
+      });
     }
   };
 
@@ -172,27 +230,7 @@ export default function AddProduct() {
     });
   };
 
-  const handleFileChange = (e) => {
-    const selectedFiles = e.target.files;
-
-    // Limit the number of selected files to 5
-    const selectedFilesArray = Array.from(selectedFiles).slice(0, 5);
-
-    // Convert each file to an object with additional properties if needed
-    const photoObjects = selectedFilesArray.map((file) => ({
-      file,
-      // You can add more properties here, such as a caption or other metadata
-    }));
-
-    setPhotos((prevPhotos) => [...prevPhotos, ...photoObjects]);
-  };
-
-  const handleRemovePhoto = (index) => {
-    // Rimuovi la foto corrispondente all'indice dall'array
-    const updatedPhotos = [...photos];
-    updatedPhotos.splice(index, 1);
-    setPhotos(updatedPhotos);
-  };
+  console.log(photo);
   return (
     <>
       <Snackbar
@@ -207,7 +245,10 @@ export default function AddProduct() {
         </Alert>
       </Snackbar>
       <div className="py-10 p-10 lg:pl-unit-80">
-        <h1 className="font-bold text-3xl">Nuovo prodotto</h1>
+        <div className="flex flex-col justify-center gap-5">
+          <h1 className="font-bold text-3xl">Modifica: </h1>
+          <h1 className="font-semibold text-2xl">{name}</h1>
+        </div>
 
         <form>
           <div className="space-y-12 sm:space-y-16">
@@ -228,6 +269,7 @@ export default function AddProduct() {
                       radius="sm"
                       className="lg:w-1/2"
                       onChange={handleProductName}
+                      value={product.productName}
                     />
                   </div>
                 </div>
@@ -246,10 +288,9 @@ export default function AddProduct() {
                       modules={modules}
                       formats={formats}
                       placeholder="Descrizione prodotto"
+                      value={product.productDescription}
                       onChange={handleProductDescription}
-                      value={newProduct.productDescription || ""}
                     />
-
                     <p className="mt-3 text-sm leading-6 text-gray-600">
                       Inserisci una descrizione del prodotto
                     </p>
@@ -272,8 +313,9 @@ export default function AddProduct() {
                       radius="sm"
                       className="lg:w-1/2"
                       endContent="Pz."
-                      onChange={handleProductAmount}
                       onKeyPress={handleKeyPress}
+                      value={product.productAmount}
+                      onChange={handleProductAmount}
                     />
                   </div>
 
@@ -292,8 +334,11 @@ export default function AddProduct() {
                       radius="sm"
                       className="lg:w-1/2"
                       endContent="€"
-                      onChange={handleUnitPrice}
                       onKeyPress={handleKeyPressPrice}
+                      value={product.unitPrice}
+                      onChange={(e) =>
+                        setProduct({ ...product, unitPrice: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -310,18 +355,21 @@ export default function AddProduct() {
                       Dimensioni consigliate per l'immagine: <br /> 500x500
                       pixel.
                     </Alert>
-                    {photos.map((photo, index) => (
+                    {photo.map((photo, index) => (
                       <div
                         key={index}
                         className="flex flex-row gap-5 items-center"
                       >
                         <Image
-                          isBordered
                           radius="sm"
                           size="lg"
                           width={200}
                           height={200}
-                          src={URL.createObjectURL(photo.file)}
+                          src={
+                            photo.productImagePath
+                              ? API_URL + "/uploads/" + photo.productImagePath
+                              : URL.createObjectURL(photo.file)
+                          }
                         />
                         <Button
                           isIconOnly
@@ -334,7 +382,7 @@ export default function AddProduct() {
                       </div>
                     ))}
 
-                    {photos.length < 5 && (
+                    {photo.length < 5 && (
                       <label className="relative inline-flex justify-center items-center bg-primary dark:text-black text-white px-4 py-2 rounded-md cursor-pointer w-full">
                         <input
                           type="file"
@@ -345,10 +393,10 @@ export default function AddProduct() {
                           ref={fileInputRef}
                         />
                         <FileUploadRoundedIcon />
-                        {photos.length === 0 ? (
+                        {photo.length === 0 ? (
                           <span>Carica copertina</span>
                         ) : (
-                          <span>Carica foto {photos.length + "/" + 5}</span>
+                          <span>Carica foto {photo.length + "/" + 5}</span>
                         )}
                       </label>
                     )}
@@ -369,11 +417,11 @@ export default function AddProduct() {
             <Button
               color="primary"
               radius="sm"
-              isDisabled={enableSubmit() || isAddingProduct} // Disabilita il pulsante quando è in corso l'aggiunta del prodotto
-              onClick={handleAddProduct}
+              isDisabled={enableSubmit() || isAddingProduct}
+              onClick={handleSubmit}
               isLoading={isAddingProduct}
             >
-              {isAddingProduct ? "Aggiungendo..." : "Aggiungi prodotto"}{" "}
+              {isAddingProduct ? "Aggiornando..." : "Modifica prodotto"}{" "}
             </Button>
           </div>
         </form>

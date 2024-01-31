@@ -171,7 +171,10 @@ export default function ProductTable() {
               >
                 Visualizza
               </DropdownItem>
-              <DropdownItem startContent={<EditOutlinedIcon />}>
+              <DropdownItem
+                startContent={<EditOutlinedIcon />}
+                href={`/products/edit-product/${product.idProduct}/${product.productName}`}
+              >
                 Modifica
               </DropdownItem>
               <DropdownItem
@@ -248,7 +251,10 @@ export default function ProductTable() {
 
       {alertData.isOpen && (
         <Backdrop
-          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          sx={{
+            backdropFilter: "blur(5px)",
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+          }}
           open={open}
           onClick={handleClose}
         >

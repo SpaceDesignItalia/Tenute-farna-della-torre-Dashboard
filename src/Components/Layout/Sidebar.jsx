@@ -22,6 +22,7 @@ const navigation = [
       "/products/add-product",
       "/products/visualize-product/",
       "/products/add-product-in-featured",
+      "/products/edit-product/",
     ], // Esempio di sottoroute
   },
   {

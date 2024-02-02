@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Avatar,
@@ -6,6 +6,8 @@ import {
   AutocompleteItem,
 } from "@nextui-org/react";
 import { Snackbar, Alert, AlertTitle } from "@mui/material";
+import axios from "axios";
+import { API_URL } from "../../API/API";
 
 export default function AddFeaturedProduct() {
   const [alertData, setAlertData] = useState({
@@ -14,14 +16,19 @@ export default function AddFeaturedProduct() {
     title: "",
     message: "",
   });
-
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [products, setProducts] = useState([]);
   const [productId, setProductId] = useState(null);
+
+  useEffect(() => {
+    axios.get(API_URL + "/Featured/NotFeatured").then((response) => {
+      setProducts(response.data);
+    });
+  }, []);
 
   const onSelectionChange = (value) => {
     setProductId(value);
   };
-
-  console.log("newFeaturedProduct", productId);
 
   function enableSubmit() {
     if (productId === null) {
@@ -43,14 +50,28 @@ export default function AddFeaturedProduct() {
     }, 1000);
   }
 
-  function handleAddFeaturedProduct() {
+  const handleAddFeaturedProduct = async () => {
     setAlertData({
       isOpen: true,
       variant: "success",
       title: "Prodotto aggiunto",
       message: "Il prodotto in evidenza è stato aggiunto con successo",
     });
-  }
+
+    try {
+      const response = await axios.post(API_URL + "/Featured/CreateFeatured", {
+        idProduct: productId,
+      });
+      setIsAddingProduct(true);
+      if (response.status === 201) {
+        setTimeout(() => {
+          window.location.href = "/products";
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Errore durante l'aggiunta del prodotto", error);
+    }
+  };
 
   const handleClose = (reason) => {
     setAlertData({
@@ -60,14 +81,6 @@ export default function AddFeaturedProduct() {
       message: "",
     });
   };
-
-  const products = [
-    {
-      productImagePath: "https://picsum.photos/200/300",
-      label: "Prodotto 1",
-      value: "1",
-    },
-  ];
 
   return (
     <>
@@ -104,19 +117,22 @@ export default function AddFeaturedProduct() {
                       size="sm"
                       radius="sm"
                       onSelectionChange={onSelectionChange}
+                      isRequired
                     >
                       {products.map((product) => (
                         <AutocompleteItem
-                          key={product.value}
-                          value={product.value}
+                          key={product.idProduct}
+                          value={product.idProduct}
                           startContent={
                             <Avatar
-                              src={product.productImagePath}
+                              src={
+                                API_URL + "/uploads/" + product.productImagePath
+                              }
                               radius="sm"
                             />
                           }
                         >
-                          {product.label}
+                          {product.productName}
                         </AutocompleteItem>
                       ))}
                     </Autocomplete>
@@ -139,8 +155,9 @@ export default function AddFeaturedProduct() {
               radius="sm"
               isDisabled={enableSubmit()}
               onClick={handleAddFeaturedProduct}
+              isLoading={isAddingProduct}
             >
-              Aggiungi prodotto
+              {isAddingProduct ? "Aggiungendo..." : "Aggiungi prodotto"}
             </Button>
           </div>
         </form>

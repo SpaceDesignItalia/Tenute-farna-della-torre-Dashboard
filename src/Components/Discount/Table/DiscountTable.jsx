@@ -8,39 +8,51 @@ import {
   TableCell,
   Input,
   Button,
-  Spinner,
+  DropdownTrigger,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
   Pagination,
   Link,
+  Spinner,
 } from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar, Backdrop } from "@mui/material";
+import dayjs from "dayjs";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { API_URL } from "../../../API/API";
 import axios from "axios";
+import { API_URL } from "../../../API/API";
 
 const columns = [
-  { name: "Prodotto", uid: "productName", sortable: true },
-  { name: "Quantità in magazzino", uid: "productAmount", sortable: true },
-  { name: "Prezzo (€)", uid: "unitPrice", sortable: true },
+  { name: "Codice", uid: "cod", sortable: true },
+  { name: "Tipo", uid: "discountType", sortable: true },
+  { name: "Valore", uid: "discountValue", sortable: true },
+  { name: "Data inizio", uid: "startDate", sortable: true },
+  { name: "Data fine", uid: "endDate", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "productName",
-  "productAmount",
-  "unitPrice",
+  "cod",
+  "discountType",
+  "discountValue",
+  "startDate",
+  "endDate",
   "actions",
 ];
 
-export default function FeaturedProductTable() {
+export default function DiscountTable() {
   const [products, setProducts] = useState([]);
+  const [filterValue, setFilterValue] = React.useState("");
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = useState("all");
-  const rowsPerPage = 5;
-  const [sortDescriptor, setSortDescriptor] = useState({
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [sortDescriptor, setSortDescriptor] = React.useState({
     column: "age",
     direction: "ascending",
   });
@@ -50,28 +62,66 @@ export default function FeaturedProductTable() {
     title: "",
     message: "",
   });
-  const [page, setPage] = useState(1);
+  const [page, setPage] = React.useState(1);
 
   useEffect(() => {
-    axios.get(API_URL + "/Featured/GetAll").then((res) => {
+    axios.get(API_URL + "/Discounts/GetAll").then((res) => {
       setProducts(res.data);
-
-      // Imposta la pagina su 1 dopo aver recuperato i dati
-      setPage(1);
     });
   }, []);
+
+  const hasSearchFilter = Boolean(filterValue);
+
+  const headerColumns = React.useMemo(() => {
+    if (visibleColumns === "all") return columns;
+
+    return columns.filter((column) =>
+      Array.from(visibleColumns).includes(column.uid)
+    );
+  }, [visibleColumns]);
+
+  const filteredItems = React.useMemo(() => {
+    let filteredProducts = [...products];
+
+    if (hasSearchFilter) {
+      filteredProducts = filteredProducts.filter((product) =>
+        product.name.toLowerCase().includes(filterValue.toLowerCase())
+      );
+    }
+
+    return filteredProducts;
+  }, [products, filterValue, statusFilter]);
+
+  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+
+  const items = React.useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems.slice(start, end);
+  }, [page, filteredItems, rowsPerPage]);
+
+  const sortedItems = React.useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column];
+      const second = b[sortDescriptor.column];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
+
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
 
   function searchProduct(e) {
     const filterValue = e;
 
     if (filterValue === "") {
       // Se il valore di ricerca è vuoto, carica nuovamente tutti i prodotti
-      axios.get(API_URL + "/Featured/GetAll").then((res) => {
+      axios.get(API_URL + "/Discounts/GetAll").then((res) => {
         setProducts(res.data);
       });
     } else {
       axios
-        .get(API_URL + `/Featured/GetProductByName/${filterValue}`)
+        .get(API_URL + `/Discounts/GetDiscountByCode/${filterValue}`)
         .then((res) => {
           setProducts(res.data);
         })
@@ -81,15 +131,16 @@ export default function FeaturedProductTable() {
     }
   }
 
-  function deleteProduct(id) {
-    axios.delete(API_URL + `/Featured/DeleteFeatured/${id}`).then((res) => {
+  function deleteDiscount(id) {
+    axios.delete(API_URL + `/Discounts/DeleteDiscount/${id}`).then((res) => {
       setAlertData({
         ...alertData,
         isOpen: true,
         variant: "success",
         title: "Prodotto rimosso",
-        message: "Il prodotto è stato rimosso con successo dagli in evidenza",
+        message: "Il prodotto è stato rimosso con successo dal magazzino!",
       });
+
       if (res.status === 200) {
         setTimeout(() => {
           location.reload();
@@ -108,53 +159,72 @@ export default function FeaturedProductTable() {
     });
   };
 
-  const headerColumns = React.useMemo(() => {
-    if (visibleColumns === "all") return columns;
-
-    return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
-    );
-  }, [visibleColumns]);
-
-  const pages = Math.ceil(products.length / rowsPerPage);
-
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return products.slice(start, end);
-  }, [page, products, rowsPerPage]);
-
-  const sortedItems = React.useMemo(() => {
-    return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
-
-      return sortDescriptor.direction === "descending" ? -cmp : cmp;
-    });
-  }, [sortDescriptor, items]);
-
-  const renderCell = React.useCallback((product, columnKey) => {
-    const cellValue = product[columnKey];
+  const renderCell = React.useCallback((discount, columnKey) => {
+    const cellValue = discount[columnKey];
 
     switch (columnKey) {
-      case "productName":
-        return <div>{product.productName}</div>;
-      case "productAmount":
-        return <div>{product.productAmount}</div>;
-      case "unitPrice":
-        return <div>€ {product.unitPrice.toFixed(2)}</div>;
+      case "cod":
+        return (
+          <div>
+            {discount.discountCode !== null ? (
+              discount.discountCode
+            ) : (
+              <>Non previsto</>
+            )}
+          </div>
+        );
+      case "discountType":
+        return <div>{discount.typeName}</div>;
+      case "discountValue":
+        return (
+          <div>
+            {discount.idDiscountType === 1 ? (
+              <>€ {discount.value.toFixed(2)}</>
+            ) : (
+              <>{discount.value}%</>
+            )}
+          </div>
+        );
+      case "startDate":
+        return <div>{dayjs(discount.startDate).format("DD/MM/YYYY")}</div>;
+      case "endDate":
+        return (
+          <div>
+            {discount.endDate === null ? (
+              <p className="text-2xl">♾️</p>
+            ) : (
+              dayjs(discount.endDate).format("DD/MM/YYYY")
+            )}
+          </div>
+        );
       case "actions":
         return (
-          <Button
-            startContent={<DeleteOutlineRoundedIcon />}
-            color="danger"
-            radius="sm"
-            onClick={() => deleteProduct(product.idProduct)}
-          >
-            Rimuovi
-          </Button>
+          <div className="relative flex items-center gap-2">
+            <Dropdown radius="sm">
+              <DropdownTrigger>
+                <Button isIconOnly size="sm" variant="light">
+                  <MoreVertIcon />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem
+                  startContent={<RemoveRedEyeOutlinedIcon />}
+                  href={`/discounts/visualize-discount/${discount.idDiscount}/${discount.discountCode}`}
+                >
+                  Visualizza
+                </DropdownItem>
+
+                <DropdownItem
+                  className="text-danger"
+                  color="danger"
+                  onClick={() => deleteDiscount(discount.idDiscount)}
+                  startContent={<DeleteOutlineRoundedIcon />}
+                >
+                  Rimuovi
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         );
       default:
         return cellValue;
@@ -186,30 +256,32 @@ export default function FeaturedProductTable() {
         <div className="flex flex-col lg:flex-row justify-between gap-3 lg:items-end">
           <Input
             className="lg:w-1/3"
-            placeholder="Cerca per nome prodotto"
+            placeholder="Cerca per codice sconto"
             variant="bordered"
             size="sm"
             startContent={<SearchRoundedIcon />}
             onChange={(e) => searchProduct(e.target.value)}
           />
           <Button
-            as={Link}
-            href="/products/add-product-in-featured"
             startContent={<AddRoundedIcon />}
+            as={Link}
+            href="/discounts/add-discount"
             color="primary"
             radius="sm"
           >
-            Aggiungi in evidenza
+            Aggiungi sconto
           </Button>
         </div>
       </div>
     );
   }, [
+    filterValue,
     statusFilter,
     visibleColumns,
     onRowsPerPageChange,
     products.length,
     onSearchChange,
+    hasSearchFilter,
   ]);
 
   const bottomContent = React.useMemo(() => {
@@ -226,7 +298,7 @@ export default function FeaturedProductTable() {
         />
       </div>
     );
-  }, [page, pages]);
+  }, [page, pages, hasSearchFilter]);
 
   return (
     <>
@@ -254,7 +326,6 @@ export default function FeaturedProductTable() {
           <Spinner color="primary" size="lg" />
         </Backdrop>
       )}
-
       <Table
         aria-label="Example table with custom cells, pagination and sorting"
         isStriped
@@ -279,12 +350,9 @@ export default function FeaturedProductTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody
-          emptyContent={"Nessun prodotto in evidenza trovato"}
-          items={sortedItems}
-        >
+        <TableBody emptyContent={"Nessuno sconto trovato"} items={sortedItems}>
           {(item) => (
-            <TableRow key={item.idProduct}>
+            <TableRow key={item.discountCode}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

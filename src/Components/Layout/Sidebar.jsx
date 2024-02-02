@@ -8,10 +8,46 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import DiscountOutlinedIcon from "@mui/icons-material/DiscountOutlined";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: DashboardOutlinedIcon },
-  { name: "Prodotti", href: "/products", icon: Inventory2OutlinedIcon },
-  { name: "Sconti", href: "/discounts", icon: DiscountOutlinedIcon },
+  {
+    name: "Dashboard",
+    href: "/",
+    icon: DashboardOutlinedIcon,
+    subRoutes: [], // Aggiungi le sottoroute qui se necessario
+  },
+  {
+    name: "Prodotti",
+    href: "/products",
+    icon: Inventory2OutlinedIcon,
+    subRoutes: [
+      "/products/add-product",
+      "/products/visualize-product/",
+      "/products/add-product-in-featured",
+      "/products/edit-product/",
+    ], // Esempio di sottoroute
+  },
+  {
+    name: "Sconti",
+    href: "/discounts",
+    icon: DiscountOutlinedIcon,
+    subRoutes: ["/discounts/add-discount", "/discounts/visualize-discount/"], // Aggiungi le sottoroute qui se necessario
+  },
 ];
+
+function isSubRoute(currentUrl, parentRoutes) {
+  return parentRoutes.some((parentRoute) => {
+    // Controlla se l'URL attuale corrisponde al percorso principale
+    if (currentUrl === parentRoute.href) {
+      return true;
+    }
+    // Controlla se l'URL attuale è una sottoroute del percorso principale
+    if (parentRoute.subRoutes && parentRoute.subRoutes.length > 0) {
+      return parentRoute.subRoutes.some((subRoute) =>
+        currentUrl.startsWith(subRoute)
+      );
+    }
+    return false;
+  });
+}
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -28,15 +64,20 @@ export default function Sidebar() {
 
   function isSubRoute(currentUrl, parentRoutes) {
     return parentRoutes.some((parentRoute) => {
-      return (
-        currentUrl.startsWith(parentRoute) &&
-        (currentUrl === parentRoute || currentUrl[parentRoute.length] === "/")
-      );
+      // Controlla se l'URL attuale corrisponde al percorso principale
+      if (currentUrl === parentRoute) {
+        return true;
+      }
+      // Controlla se l'URL attuale è una sottoroute del percorso principale
+      if (parentRoute.subRoutes && parentRoute.subRoutes.length > 0) {
+        return parentRoute.subRoutes.some((subRoute) =>
+          currentUrl.startsWith(subRoute)
+        );
+      }
+      return false;
     });
   }
 
-  const mainRoutes = ["/products", "/dashboard", "/other"]; // Aggiungi le route principali necessarie
-  const isMainRoute = isSubRoute(currentUrl, mainRoutes);
   return (
     <>
       <div>
@@ -110,9 +151,8 @@ export default function Sidebar() {
                                 <a
                                   href={item.href}
                                   className={classNames(
-                                    (isMainRoute &&
-                                      mainRoutes.includes(item.href)) ||
-                                      currentUrl === item.href
+                                    isSubRoute(currentUrl, [item]) ||
+                                      currentUrl === item.href // Verifica se è una sottoroute del percorso principale
                                       ? "bg-gray-100 text-primary font-bold"
                                       : "text-gray-700 hover:text-primary hover:bg-gray-100",
                                     "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
@@ -165,7 +205,7 @@ export default function Sidebar() {
                         <a
                           href={item.href}
                           className={classNames(
-                            (isMainRoute && mainRoutes.includes(item.href)) ||
+                            isSubRoute(currentUrl, [item]) ||
                               currentUrl === item.href
                               ? "bg-gray-100 text-primary font-bold"
                               : "text-gray-700 hover:text-primary hover:bg-gray-100",

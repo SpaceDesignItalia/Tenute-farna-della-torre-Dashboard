@@ -1,5 +1,5 @@
 import React from "react";
-import DiscountTable from "../../Components/Discount/DiscountTable";
+import DiscountTable from "../../Components/Discount/Table/DiscountTable";
 
 export default function DiscountDashboard() {
   return (

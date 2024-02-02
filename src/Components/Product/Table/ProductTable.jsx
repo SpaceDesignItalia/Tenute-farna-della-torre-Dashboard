@@ -31,6 +31,7 @@ const columns = [
   { name: "Prodotto", uid: "productName", sortable: true },
   { name: "Quantità in magazzino", uid: "productAmount", sortable: true },
   { name: "Prezzo (€)", uid: "unitPrice", sortable: true },
+  { name: "Codice sconto", uid: "discountCode", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
 
@@ -39,6 +40,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "productName",
   "productAmount",
   "unitPrice",
+  "discountCode",
   "actions",
 ];
 
@@ -156,6 +158,17 @@ export default function ProductTable() {
         return <div>{product.productAmount}</div>;
       case "unitPrice":
         return <div>€ {product.unitPrice.toFixed(2)}</div>;
+      case "discountCode":
+        return (
+          <div>
+            {product.discountCode !== null ? (
+              product.discountCode
+            ) : (
+              <>Non scontato</>
+            )}
+          </div>
+        );
+
       case "actions":
         return (
           <Dropdown radius="sm">

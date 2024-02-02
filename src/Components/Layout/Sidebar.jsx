@@ -29,7 +29,7 @@ const navigation = [
     name: "Sconti",
     href: "/discounts",
     icon: DiscountOutlinedIcon,
-    subRoutes: ["/discounts/add-discount"], // Aggiungi le sottoroute qui se necessario
+    subRoutes: ["/discounts/add-discount", "/discounts/visualize-discount/"], // Aggiungi le sottoroute qui se necessario
   },
 ];
 

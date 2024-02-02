@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Route, Routes, Navigate, Outlet } from "react-router-dom";
+import { Route, Routes, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { Spinner } from "@nextui-org/react";
 import axios from "axios";
 import { API_URL } from "./API/API";
@@ -12,30 +12,33 @@ import DiscountDashboard from "./Pages/Discount/DiscountDashboard";
 import AddFeaturedProduct from "./Pages/Product/AddFeaturedProduct";
 import VisualizeProduct from "./Pages/Product/VisualizeProduct";
 import EditProduct from "./Pages/Product/EditProduct";
+import VisualizeDiscount from "./Pages/Discount/VisualizeDiscount";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Set initial loading state to true
+  const navigate = useNavigate();
 
-  /* useEffect(() => {
+  useEffect(() => {
     axios
       .get(API_URL + "Auth/CheckSession", { withCredentials: true })
       .then((res) => {
         if (res.status === 200) {
           setIsAuth(res.data);
         }
-        setIsLoading(false);
       })
       .catch((err) => {
         console.log(err);
-        setIsLoading(false);
+      })
+      .finally(() => {
+        setIsLoading(false); // Update loading state when request is completed
       });
-  }, []); */
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="absolute left-0 w-full h-full flex flex-col justify-center items-center">
-        <Spinner size="lg" color="danger" />
+      <div className="absolute left-0 w-full h-full flex flex-col justify-center items-center bg-gray-200">
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
@@ -87,6 +90,11 @@ export default function App() {
             exact
             path="/discounts/add-discount"
             element={<AddDiscount />}
+          />
+          <Route
+            exact
+            path="/discounts/visualize-discount/:id/:code"
+            element={<VisualizeDiscount />}
           />
         </Route>
       </Routes>

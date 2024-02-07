@@ -13,25 +13,30 @@ import AddFeaturedProduct from "./Pages/Product/AddFeaturedProduct";
 import VisualizeProduct from "./Pages/Product/VisualizeProduct";
 import EditProduct from "./Pages/Product/EditProduct";
 import VisualizeDiscount from "./Pages/Discount/VisualizeDiscount";
+import Login from "./Pages/Login/Login";
+import Settings from "./Pages/Settings/Settings";
 
 export default function App() {
-  const [isAuth, setIsAuth] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Set initial loading state to true
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get(API_URL + "Auth/CheckSession", { withCredentials: true })
+      .get(API_URL + "/Staffer/CheckSession", { withCredentials: true })
       .then((res) => {
-        if (res.status === 200) {
-          setIsAuth(res.data);
+        if (res.status === 200 && res.data) {
+          setIsAuth(true);
+        } else {
+          setIsAuth(false);
         }
       })
       .catch((err) => {
-        console.log(err);
+        console.error("Errore durante il controllo della sessione:", err);
+        setIsAuth(false);
       })
       .finally(() => {
-        setIsLoading(false); // Update loading state when request is completed
+        setIsLoading(false); // Aggiorna lo stato di caricamento quando la richiesta è completata
       });
   }, []);
 
@@ -64,7 +69,7 @@ export default function App() {
       {isAuth && <Sidebar />}
       <Routes>
         <Route element={<LoginRoute isAuth={isAuth} />}>
-          {/* <Route exact path="/login" element={<Login />} /> */}
+          <Route exact path="/login" element={<Login />} />
         </Route>
         <Route element={<ProtectedRoute isAuth={isAuth} />}>
           <Route exact path="/" element={<Home />} />
@@ -96,6 +101,7 @@ export default function App() {
             path="/discounts/visualize-discount/:id/:code"
             element={<VisualizeDiscount />}
           />
+          <Route exact path="/settings" element={<Settings />} />
         </Route>
       </Routes>
     </>

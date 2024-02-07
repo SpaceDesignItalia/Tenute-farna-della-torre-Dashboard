@@ -6,6 +6,9 @@ import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import DiscountOutlinedIcon from "@mui/icons-material/DiscountOutlined";
+import axios from "axios";
+import { API_URL } from "../../API/API";
+import { Spinner } from "@nextui-org/react";
 
 const navigation = [
   {
@@ -54,11 +57,27 @@ function classNames(...classes) {
 }
 
 export default function Sidebar() {
+  const [userData, setUserData] = useState({
+    id: 0,
+    name: "",
+    surname: "",
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState("/");
   const location = useLocation();
 
   useEffect(() => {
+    axios
+      .get(API_URL + "/Staffer/GetStafferData", { withCredentials: true })
+      .then((res) => {
+        setUserData({
+          ...userData,
+          id: res.data.staffer.id,
+          name: res.data.staffer.name,
+          surname: res.data.staffer.surname,
+        });
+      });
+
     setCurrentUrl(location.pathname);
   }, [location.pathname]);
 
@@ -168,15 +187,28 @@ export default function Sidebar() {
                             ))}
                           </ul>
                         </li>
-                        <li className="mt-auto">
-                          <a
-                            href="#"
-                            className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white"
-                          >
-                            Settings
-                          </a>
-                        </li>
                       </ul>
+                      <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
+                        <a
+                          href="/settings"
+                          className="group block w-full flex-shrink-0"
+                        >
+                          <div className="flex items-center">
+                            <div className="ml-3">
+                              <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                                {userData.name && userData.surname ? (
+                                  userData.name + " " + userData.surname
+                                ) : (
+                                  <Spinner />
+                                )}
+                              </p>
+                              <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+                                Visualizza profilo
+                              </p>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
                     </nav>
                   </div>
                 </Dialog.Panel>
@@ -222,21 +254,33 @@ export default function Sidebar() {
                     ))}
                   </ul>
                 </li>
-
-                <li className="mt-auto">
-                  <a
-                    href="#"
-                    className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white"
-                  >
-                    Settings
-                  </a>
-                </li>
               </ul>
+              <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
+                <a
+                  href="/settings"
+                  className="group block w-full flex-shrink-0"
+                >
+                  <div className="flex items-center">
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                        {userData.name && userData.surname ? (
+                          userData.name + " " + userData.surname
+                        ) : (
+                          <Spinner />
+                        )}
+                      </p>
+                      <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+                        Visualizza profilo
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              </div>
             </nav>
           </div>
         </div>
 
-        <div className="lg:pl-72">
+        <div className="lg:hidden lg:pl-72">
           <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
             <button
               type="button"
@@ -246,94 +290,7 @@ export default function Sidebar() {
               <span className="sr-only">Open sidebar</span>
               <MenuOutlinedIcon className="h-6 w-6" aria-hidden="true" />
             </button>
-
-            {/* Separator */}
-            <div
-              className="h-6 w-px bg-gray-900/10 lg:hidden"
-              aria-hidden="true"
-            />
-
-            <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-              <form className="relative flex flex-1" action="#" method="GET">
-                <label htmlFor="search-field" className="sr-only">
-                  Search
-                </label>
-
-                <input
-                  id="search-field"
-                  className="block h-full w-full border-0 py-0 pl-8 pr-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-                  placeholder="Search..."
-                  type="search"
-                  name="search"
-                />
-              </form>
-              <div className="flex items-center gap-x-4 lg:gap-x-6">
-                <button
-                  type="button"
-                  className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500"
-                >
-                  <span className="sr-only">View notifications</span>
-                </button>
-
-                {/* Separator */}
-                <div
-                  className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10"
-                  aria-hidden="true"
-                />
-
-                {/* Profile dropdown */}
-                <Menu as="div" className="relative">
-                  <Menu.Button className="-m-1.5 flex items-center p-1.5">
-                    <span className="sr-only">Open user menu</span>
-                    <img
-                      className="h-8 w-8 rounded-full bg-gray-50"
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                      alt=""
-                    />
-                    <span className="hidden lg:flex lg:items-center">
-                      <span
-                        className="ml-4 text-sm font-semibold leading-6 text-gray-900"
-                        aria-hidden="true"
-                      >
-                        Tom Cook
-                      </span>
-                    </span>
-                  </Menu.Button>
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-100"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                  >
-                    <Menu.Items className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
-                      {navigation.map((item) => (
-                        <Menu.Item key={item.name}>
-                          {({ active }) => (
-                            <a
-                              href={item.href}
-                              className={classNames(
-                                active ? "bg-gray-50" : "",
-                                "block px-3 py-1 text-sm leading-6 text-gray-900"
-                              )}
-                            >
-                              {item.name}
-                            </a>
-                          )}
-                        </Menu.Item>
-                      ))}
-                    </Menu.Items>
-                  </Transition>
-                </Menu>
-              </div>
-            </div>
           </div>
-
-          <main className="py-10">
-            <div className="px-4 sm:px-6 lg:px-8">{/* Your content */}</div>
-          </main>
         </div>
       </div>
     </>

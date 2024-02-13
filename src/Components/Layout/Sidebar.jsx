@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from "react";
 import { Dialog, Transition, Menu } from "@headlessui/react";
 import { useLocation } from "react-router-dom";
+import Logo from "../../assets/logo.png";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
@@ -163,8 +164,8 @@ export default function Sidebar() {
                   <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4 ring-1 ring-white/10 bg-white">
                     <div className="flex h-16 shrink-0 items-center">
                       <img
-                        className="h-8 w-auto"
-                        src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                        className="h-12 w-auto"
+                        src={Logo}
                         alt="Your Company"
                       />
                     </div>
@@ -229,11 +230,7 @@ export default function Sidebar() {
           {/* Sidebar component, swap this element with another sidebar if you like */}
           <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
             <div className="flex h-16 shrink-0 items-center">
-              <img
-                className="h-8 w-auto"
-                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                alt="Your Company"
-              />
+              <img className="h-12 w-auto" src={Logo} alt="Your Company" />
             </div>
             <nav className="flex flex-1 flex-col">
               <ul role="list" className="flex flex-1 flex-col gap-y-7">

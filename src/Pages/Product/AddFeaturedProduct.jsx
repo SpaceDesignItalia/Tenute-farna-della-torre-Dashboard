@@ -4,6 +4,8 @@ import {
   Avatar,
   Autocomplete,
   AutocompleteItem,
+  Breadcrumbs,
+  BreadcrumbItem,
 } from "@nextui-org/react";
 import { Snackbar, Alert, AlertTitle } from "@mui/material";
 import axios from "axios";
@@ -95,7 +97,12 @@ export default function AddFeaturedProduct() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      <div className="py-10 p-10 lg:pl-unit-80">
+      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+        <Breadcrumbs>
+          <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
+          <BreadcrumbItem href="/products">Prodotti</BreadcrumbItem>
+          <BreadcrumbItem>Aggiungi in evidenza</BreadcrumbItem>
+        </Breadcrumbs>
         <h1 className="font-bold text-3xl">Aggiungi prodotto in evidenza</h1>
 
         <form>

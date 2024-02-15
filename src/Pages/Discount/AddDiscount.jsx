@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Input, Avatar } from "@nextui-org/react";
+import {
+  Button,
+  Input,
+  Avatar,
+  Breadcrumbs,
+  BreadcrumbItem,
+} from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import {
   Select,
@@ -289,7 +295,12 @@ export default function AddDiscount() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      <div className="py-10 p-10 lg:pl-unit-80">
+      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+        <Breadcrumbs>
+          <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
+          <BreadcrumbItem href="/discounts">Sconti</BreadcrumbItem>
+          <BreadcrumbItem>Nuovo sconto</BreadcrumbItem>
+        </Breadcrumbs>
         <h1 className="font-bold text-3xl">Nuovo sconto</h1>
 
         <form>

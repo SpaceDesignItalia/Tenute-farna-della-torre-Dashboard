@@ -162,7 +162,16 @@ export default function ProductTable() {
         return (
           <div>
             {product.discountCode !== null ? (
-              product.discountCode
+              <Link
+                href={
+                  "/discounts/visualize-discount/" +
+                  product.idDiscount +
+                  "/" +
+                  product.discountCode
+                }
+              >
+                {product.discountCode}
+              </Link>
             ) : (
               <>Non scontato</>
             )}

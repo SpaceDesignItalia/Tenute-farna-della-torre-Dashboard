@@ -80,6 +80,13 @@ export default function SidePanel({ open, setOpen }) {
     }
   };
 
+  function handleDisable() {
+    if (selectedStatus === null) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   return (
     <Transition.Root show={open.open} as={Fragment}>
       <Dialog
@@ -215,6 +222,7 @@ export default function SidePanel({ open, setOpen }) {
                                 return (
                                   <>
                                     <Image
+                                      className="cursor-pointer"
                                       src={
                                         API_URL +
                                         "/Documents/" +
@@ -250,6 +258,7 @@ export default function SidePanel({ open, setOpen }) {
                           color="primary"
                           radius="sm"
                           isLoading={pendingStatus}
+                          isDisabled={handleDisable()}
                           onClick={handleSaveStatus} // Call handleSaveStatus on click
                         >
                           Salva

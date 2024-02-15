@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Input, Image } from "@nextui-org/react";
+import {
+  Button,
+  Input,
+  Image,
+  Breadcrumbs,
+  BreadcrumbItem,
+} from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -244,7 +250,12 @@ export default function EditProduct() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      <div className="py-10 p-10 lg:pl-unit-80">
+      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+        <Breadcrumbs>
+          <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
+          <BreadcrumbItem href="/products">Prodotti</BreadcrumbItem>
+          <BreadcrumbItem>{product.productName}</BreadcrumbItem>
+        </Breadcrumbs>
         <div className="flex flex-col justify-center gap-5">
           <h1 className="font-bold text-3xl">Modifica: </h1>
           <h1 className="font-semibold text-2xl">{name}</h1>

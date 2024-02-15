@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Input } from "@nextui-org/react";
 import bg from "../../assets/bg.jpg";
+import Logo from "../../assets/logo.png";
 import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import axios from "axios";
@@ -35,12 +36,8 @@ export default function Login() {
     <div className="h-screen flex min-h-full flex-1">
       <div className="w-1/2 flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
-          <div>
-            <img
-              className="h-10 w-auto"
-              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-              alt="Your Company"
-            />
+          <div className="flex flex-col justify-center items-center">
+            <img className="h-52 w-auto" src={Logo} alt="Your Company" />
             <h2 className="mt-8 text-2xl font-bold leading-9 tracking-tight text-gray-900">
               Accedi al pannello amministrativo
             </h2>

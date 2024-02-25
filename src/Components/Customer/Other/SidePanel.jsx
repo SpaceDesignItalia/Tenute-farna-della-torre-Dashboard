@@ -22,7 +22,6 @@ export default function SidePanel({ open, setOpen }) {
   const [selectedStatus, setSelectedStatus] = useState(null); // State for selected status
   const [pendingStatus, setPendingStatus] = useState(false); // State for pending status changes
 
-  console.log(selectedStatus);
   const status = [
     {
       idStatus: 1,

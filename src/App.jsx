@@ -39,7 +39,7 @@ export default function App() {
       .finally(() => {
         setIsLoading(false); // Aggiorna lo stato di caricamento quando la richiesta è completata
       });
-  }, []);
+  }, [isAuth]);
 
   if (isLoading) {
     return (

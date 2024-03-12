@@ -11,6 +11,8 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import QRCode from "react-qr-code";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../../API/API";
@@ -55,6 +57,7 @@ export default function EditProduct() {
       .get(API_URL + "/Products/GetProductByNameAndId/" + id + "/" + name)
       .then((res) => {
         const initialProductData = res.data[0];
+
         setProduct({
           productName: initialProductData.productName,
           productDescription: initialProductData.productDescription,
@@ -236,7 +239,20 @@ export default function EditProduct() {
     });
   };
 
-  console.log(photo);
+  const onImageDownload = (name) => {
+    const svg = document.getElementById("QrCode");
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+
+    const downloadLink = document.createElement("a");
+    downloadLink.download = "QR_" + name + ".svg";
+    downloadLink.href = url;
+    downloadLink.click();
+
+    URL.revokeObjectURL(url); // Free up the URL resource when it's no longer needed
+  };
+
   return (
     <>
       <Snackbar
@@ -411,6 +427,40 @@ export default function EditProduct() {
                         )}
                       </label>
                     )}
+                  </div>
+                </div>
+
+                <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:py-6">
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
+                  >
+                    QR Code
+                  </label>
+                  <div className="flex flex-col gap-10">
+                    <div className="flex flex-col gap-5 items-center">
+                      <QRCode
+                        id="QrCode"
+                        size={256}
+                        value={
+                          "https://www.tenutefarina.it/store/product/" +
+                          id +
+                          "/" +
+                          encodeURIComponent(name.toLowerCase()) +
+                          "/details"
+                        }
+                        viewBox={`0 0 256 256`}
+                      />
+                      <Button
+                        color="primary"
+                        radius="sm"
+                        className="w-4/5"
+                        startContent={<DownloadRoundedIcon />}
+                        onClick={() => onImageDownload(product.productName)}
+                      >
+                        Scarica codice
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

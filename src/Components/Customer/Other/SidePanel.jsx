@@ -10,6 +10,7 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import axios from "axios";
 import { API_URL } from "../../../API/API";
 import PhotoViewer from "./PhotoViewer";
+import DeleteModal from "./DeleteModal";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -209,43 +210,47 @@ export default function SidePanel({ open, setOpen }) {
                               Documento
                             </dt>
                             <dd className="mt-1 text-sm text-gray-900 sm:col-span-2">
-                              {customer.documentType}
+                              {customer.documentType ? (
+                                customer.documentType
+                              ) : (
+                                <p>Nessun documento caricato</p>
+                              )}
                             </dd>
                           </div>
+                          {documentPhotos.length !== 0 && (
+                            <div>
+                              <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">
+                                Foto documento
+                              </dt>
+                              <dd className="mt-1 text-sm text-gray-900 sm:col-span-2">
+                                {documentPhotos.map((image) => {
+                                  return (
+                                    <>
+                                      <Image
+                                        className="cursor-pointer"
+                                        src={
+                                          API_URL +
+                                          "/Documents/" +
+                                          image.documentPath
+                                        }
+                                        width={200}
+                                        onClick={() => setOpenPhoto(true)}
+                                      />
+                                      <PhotoViewer
+                                        open={openPhoto}
+                                        setOpen={setOpenPhoto}
+                                        image={image}
+                                      />
+                                    </>
+                                  );
+                                })}
+                              </dd>
+                            </div>
+                          )}
+
                           <div>
-                            <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">
-                              Foto documento
-                            </dt>
                             <dd className="mt-1 text-sm text-gray-900 sm:col-span-2">
-                              {documentPhotos.map((image) => {
-                                return (
-                                  <>
-                                    <Image
-                                      className="cursor-pointer"
-                                      src={
-                                        API_URL +
-                                        "/Documents/" +
-                                        image.documentPath
-                                      }
-                                      width={200}
-                                      onClick={() => setOpenPhoto(true)}
-                                    />
-                                    <PhotoViewer
-                                      open={openPhoto}
-                                      setOpen={setOpenPhoto}
-                                      image={image}
-                                    />
-                                  </>
-                                );
-                              })}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">
-                              Documento
-                            </dt>
-                            <dd className="mt-1 text-sm text-gray-900 sm:col-span-2">
-                              {customer.documentType}
+                              <DeleteModal user={customer} />
                             </dd>
                           </div>
                         </dl>
@@ -259,7 +264,7 @@ export default function SidePanel({ open, setOpen }) {
                           radius="sm"
                           onClick={() => setOpen({ ...open, open: false })}
                         >
-                          Cancella
+                          Chiudi
                         </Button>
                         <Button
                           color="primary"

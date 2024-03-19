@@ -6,6 +6,7 @@ import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import DiscountOutlinedIcon from "@mui/icons-material/DiscountOutlined";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import axios from "axios";
 import { API_URL } from "../../API/API";
 import { Spinner } from "@nextui-org/react";
@@ -33,6 +34,12 @@ const navigation = [
     href: "/discounts",
     icon: DiscountOutlinedIcon,
     subRoutes: ["/discounts/add-discount", "/discounts/visualize-discount/"], // Aggiungi le sottoroute qui se necessario
+  },
+  {
+    name: "Clienti",
+    href: "/customers",
+    icon: PeopleAltOutlinedIcon,
+    subRoutes: [], // Aggiungi le sottoroute qui se necessario
   },
 ];
 

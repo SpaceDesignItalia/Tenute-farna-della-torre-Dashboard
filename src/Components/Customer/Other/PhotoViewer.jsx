@@ -27,6 +27,11 @@ export default function PhotoViewer({ open, setOpen, image }) {
     setRotation(closestValidRotation);
   };
 
+  function handleClose() {
+    setOpen(false);
+    setRotation(0);
+  }
+
   return (
     <AnimatePresence>
       {open && (
@@ -36,11 +41,7 @@ export default function PhotoViewer({ open, setOpen, image }) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-gray-500 bg-opacity-75"
         >
-          <Dialog
-            as="div"
-            className="relative z-50"
-            onClose={() => setOpen(false)}
-          >
+          <Dialog as="div" className="relative z-50" onClose={handleClose}>
             <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
               <div className="flex min-h-full items-stretch justify-center text-center md:items-center md:px-2 lg:px-4">
                 <Dialog.Panel className="flex w-full transform text-left text-base transition md:my-8 md:max-w-2xl md:px-4 lg:max-w-4xl">
@@ -48,7 +49,7 @@ export default function PhotoViewer({ open, setOpen, image }) {
                     <button
                       type="button"
                       className="absolute right-4 top-4 text-gray-400 hover:text-gray-500 sm:right-6 sm:top-8 md:right-6 md:top-6 lg:right-8 lg:top-8"
-                      onClick={() => setOpen(false)}
+                      onClick={handleClose}
                     >
                       <span className="sr-only">Close</span>
                       <CloseOutlinedIcon
@@ -62,7 +63,12 @@ export default function PhotoViewer({ open, setOpen, image }) {
                         <motion.img
                           src={API_URL + "/Documents/" + image.documentPath}
                           className="object-cover object-center w-1/2"
-                          animate={{ rotate: rotation }} // Animazione della rotazione
+                          animate={{ rotate: rotation }}
+                          transition={{
+                            ease: "linear",
+                            duration: 0.2,
+                            x: { duration: 1 },
+                          }}
                         />
 
                         <div className="mt-4 flex justify-center space-x-4">

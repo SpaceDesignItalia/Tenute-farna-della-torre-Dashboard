@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import axios from "axios";
 import { API_URL } from "../../API/API";
+import { BreadcrumbItem, Breadcrumbs } from "@nextui-org/react";
 
 export default function VisualizeDiscount() {
   const { id, code } = useParams();
@@ -23,7 +24,12 @@ export default function VisualizeDiscount() {
   }, [id]);
 
   return (
-    <div className="py-10 p-10 lg:pl-unit-80">
+    <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+      <Breadcrumbs>
+        <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
+        <BreadcrumbItem href="/discounts">Sconti</BreadcrumbItem>
+        <BreadcrumbItem>{code}</BreadcrumbItem>
+      </Breadcrumbs>
       <div className="px-4 sm:px-0">
         <h3 className="text-base font-semibold leading-7 text-gray-900">
           Sconto

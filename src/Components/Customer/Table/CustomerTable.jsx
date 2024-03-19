@@ -139,7 +139,7 @@ export default function CustomerTable() {
         if (customer.idStatus === 1) {
           return (
             <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
-              {customer.status}...
+              {customer.status}
             </span>
           );
         } else if (customer.idStatus === 2) {

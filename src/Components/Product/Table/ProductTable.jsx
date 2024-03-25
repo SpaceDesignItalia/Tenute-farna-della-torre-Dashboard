@@ -189,7 +189,8 @@ export default function ProductTable() {
             <DropdownMenu>
               <DropdownItem
                 startContent={<RemoveRedEyeOutlinedIcon />}
-                href={`/products/visualize-product/${product.idProduct}/${product.productName}`}
+                target="blank"
+                href={`https://www.tenutefarina.it/store/product/${product.idProduct}/${product.productName}`}
               >
                 Visualizza
               </DropdownItem>

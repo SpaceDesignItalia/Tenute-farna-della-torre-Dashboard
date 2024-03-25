@@ -10,9 +10,16 @@ import {
 } from "@nextui-org/react";
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import axios from "axios";
+import { API_URL } from "../../../API/API";
 
-export default function DeleteModal({ user }) {
+export default function DeleteModal({ customer }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  function deleteAccount() {
+    axios.delete(API_URL + "/Customer/DeleteCustomer/" + customer.id);
+  }
+
   return (
     <>
       <Button
@@ -29,7 +36,8 @@ export default function DeleteModal({ user }) {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col font-bold text-xl gap-1 text-red-800">
-                Cancella l'account di: <br /> {user.name + " " + user.surname}
+                Cancella l'account di: <br />{" "}
+                {customer.name + " " + customer.surname}
               </ModalHeader>
               <ModalBody>
                 <div className="flex">
@@ -71,7 +79,7 @@ export default function DeleteModal({ user }) {
                 >
                   Annulla
                 </Button>
-                <Button color="primary" radius="sm" onPress={onClose}>
+                <Button color="primary" radius="sm" onClick={deleteAccount}>
                   Sono sicuro
                 </Button>
               </ModalFooter>

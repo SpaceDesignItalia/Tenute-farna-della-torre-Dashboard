@@ -11,7 +11,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function PhotoViewer({ open, setOpen, image }) {
+export default function PhotoViewer({ open, image, setOpen }) {
   const [rotation, setRotation] = useState(0); // Aggiungi stato per tenere traccia della rotazione
 
   // Funzione per ruotare la foto
@@ -45,7 +45,7 @@ export default function PhotoViewer({ open, setOpen, image }) {
             <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
               <div className="flex min-h-full items-stretch justify-center text-center md:items-center md:px-2 lg:px-4">
                 <Dialog.Panel className="flex w-full transform text-left text-base transition md:my-8 md:max-w-2xl md:px-4 lg:max-w-4xl">
-                  <div className="relative flex w-full items-center overflow-hidden bg-white px-4 pb-8 pt-14 shadow-2xl sm:px-6 sm:pt-8 md:p-6 lg:p-8">
+                  <div className="relative flex w-full justify-center items-center overflow-hidden bg-white px-4 pb-8 pt-14 shadow-2xl sm:px-6 sm:pt-8 md:p-6 lg:p-8">
                     <button
                       type="button"
                       className="absolute right-4 top-4 text-gray-400 hover:text-gray-500 sm:right-6 sm:top-8 md:right-6 md:top-6 lg:right-8 lg:top-8"
@@ -61,7 +61,7 @@ export default function PhotoViewer({ open, setOpen, image }) {
                     <div className="flex flex-col">
                       <div className="flex flex-col justify-center items-center gap-5 p-10">
                         <motion.img
-                          src={API_URL + "/Documents/" + image.documentPath}
+                          src={API_URL + "/Documents/" + image}
                           className="object-cover object-center w-1/2"
                           animate={{ rotate: rotation }}
                           transition={{

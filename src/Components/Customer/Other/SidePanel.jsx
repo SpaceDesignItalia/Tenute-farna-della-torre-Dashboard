@@ -19,7 +19,7 @@ function classNames(...classes) {
 export default function SidePanel({ open, setOpen }) {
   const [customer, setCustomer] = useState({});
   const [documentPhotos, setDocumetPhotos] = useState([]);
-  const [openPhoto, setOpenPhoto] = useState(false);
+  const [openPhoto, setOpenPhoto] = useState({ open: false, image: "" });
   const [selectedStatus, setSelectedStatus] = useState(null); // State for selected status
   const [pendingStatus, setPendingStatus] = useState(false); // State for pending status changes
 
@@ -42,19 +42,39 @@ export default function SidePanel({ open, setOpen }) {
   ];
 
   useEffect(() => {
+    if (open.open) {
+      fetchData();
+    }
+  }, [open.open]);
+
+  // Funzione per caricare i dati quando il pannello è aperto
+  const fetchData = () => {
     console.log(open.customerId);
     axios
       .get(API_URL + "/Customer/GetCustomerById/" + open.customerId)
       .then((res) => {
         setCustomer(res.data);
-        setSelectedStatus(res.data.idStatus); // Set selected status when customer data is fetched
+        setSelectedStatus(res.data.idStatus);
+      })
+      .catch((error) => {
+        console.error(
+          "Errore durante il recupero dei dati del cliente:",
+          error
+        );
       });
+
     axios
       .get(API_URL + "/Customer/GetImagesByCustomerId/" + open.customerId)
       .then((res) => {
         setDocumetPhotos(res.data);
+      })
+      .catch((error) => {
+        console.error(
+          "Errore durante il recupero delle immagini del cliente:",
+          error
+        );
       });
-  }, [open.open, open.customerId]);
+  };
 
   // Function to handle status change
   function handleChangeStatus(newStatusId) {
@@ -234,23 +254,29 @@ export default function SidePanel({ open, setOpen }) {
                                           image.documentPath
                                         }
                                         width={200}
-                                        onClick={() => setOpenPhoto(true)}
-                                      />
-                                      <PhotoViewer
-                                        open={openPhoto}
-                                        setOpen={setOpenPhoto}
-                                        image={image}
+                                        onClick={() =>
+                                          setOpenPhoto({
+                                            ...openPhoto,
+                                            open: true,
+                                            image: image.documentPath,
+                                          })
+                                        }
                                       />
                                     </>
                                   );
                                 })}
+                                <PhotoViewer
+                                  open={openPhoto.open}
+                                  setOpen={setOpenPhoto}
+                                  image={openPhoto.image}
+                                />
                               </dd>
                             </div>
                           )}
 
                           <div>
                             <dd className="mt-1 text-sm text-gray-900 sm:col-span-2">
-                              <DeleteModal user={customer} />
+                              <DeleteModal customer={customer} />
                             </dd>
                           </div>
                         </dl>

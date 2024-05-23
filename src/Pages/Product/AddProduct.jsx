@@ -422,7 +422,7 @@ export default function AddProduct() {
                         </div>
                       )}
 
-                      {photos.length < 5 && (
+                      {!labelPhoto && (
                         <label className="relative inline-flex justify-center items-center bg-primary dark:text-black text-white px-4 py-2 rounded-md cursor-pointer w-full">
                           <input
                             type="file"

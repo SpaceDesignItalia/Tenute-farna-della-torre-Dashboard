@@ -363,9 +363,7 @@ export default function EditProduct() {
                       endContent="€"
                       onKeyPress={handleKeyPressPrice}
                       value={product.unitPrice}
-                      onChange={(e) =>
-                        setProduct({ ...product, unitPrice: e.target.value })
-                      }
+                      onChange={(e) => handleUnitPrice}
                     />
                   </div>
                 </div>

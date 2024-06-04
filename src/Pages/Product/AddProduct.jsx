@@ -5,6 +5,7 @@ import {
   Image,
   Breadcrumbs,
   BreadcrumbItem,
+  Checkbox,
 } from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import ReactQuill from "react-quill";
@@ -27,9 +28,14 @@ export default function AddProduct() {
     productAmount: "",
     unitPrice: "",
   });
+
+  const [isWine, setIsWine] = React.useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [photos, setPhotos] = useState([]);
+  const [labelPhoto, setLabelPhoto] = useState(null);
+
   const fileInputRef = useRef(null);
+  const fileInputRef2 = useRef(null);
 
   const modules = {
     toolbar: [
@@ -103,11 +109,12 @@ export default function AddProduct() {
 
   function enableSubmit() {
     if (
-      newProduct.productName !== "" &&
-      newProduct.productDescription !== "" &&
-      newProduct.productAmount !== 0 &&
-      newProduct.unitPrice !== 0 &&
-      photos.length !== 0
+      (newProduct.productName !== "" &&
+        newProduct.productDescription !== "" &&
+        newProduct.productAmount !== 0 &&
+        newProduct.unitPrice !== 0 &&
+        photos.length !== 0) ||
+      (isWine !== true && labelPhoto !== null)
     ) {
       return false;
     }
@@ -146,6 +153,7 @@ export default function AddProduct() {
     formData.append("productAmount", newProduct.productAmount);
     formData.append("unitPrice", newProduct.unitPrice);
     formData.append("isDiscount", newProduct.isDiscount);
+    formData.append("productLabel", labelPhoto);
 
     // Aggiungi le immagini del prodotto
     photos.forEach((photo, index) => {
@@ -198,6 +206,15 @@ export default function AddProduct() {
     const updatedPhotos = [...photos];
     updatedPhotos.splice(index, 1);
     setPhotos(updatedPhotos);
+  };
+
+  const handleLabelPhotoChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setLabelPhoto(selectedFile);
+  };
+
+  const handleRemoveLabelPhoto = () => {
+    setLabelPhoto(null);
   };
   return (
     <>
@@ -364,6 +381,63 @@ export default function AddProduct() {
                       </label>
                     )}
                   </div>
+                </div>
+
+                <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:py-6">
+                  <label
+                    htmlFor="first-name"
+                    className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
+                  >
+                    <Checkbox
+                      isSelected={isWine}
+                      onValueChange={setIsWine}
+                      radius="sm"
+                    />
+                    Vino
+                  </label>
+                  {isWine && (
+                    <div className="flex flex-col gap-10">
+                      <Alert variant="outlined" severity="warning">
+                        Dimensioni consigliate per l'immagine: <br /> 500x500
+                        pixel.
+                      </Alert>
+                      {labelPhoto !== null && (
+                        <div className="flex flex-row gap-5 items-center">
+                          <Image
+                            isBordered
+                            radius="sm"
+                            size="lg"
+                            width={200}
+                            height={200}
+                            src={URL.createObjectURL(labelPhoto)}
+                          />
+                          <Button
+                            isIconOnly
+                            className="bg-red-500 text-white"
+                            radius="sm"
+                            onClick={() => handleRemoveLabelPhoto()}
+                          >
+                            <DeleteRoundedIcon />{" "}
+                          </Button>
+                        </div>
+                      )}
+
+                      {!labelPhoto && (
+                        <label className="relative inline-flex justify-center items-center bg-primary dark:text-black text-white px-4 py-2 rounded-md cursor-pointer w-full">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleLabelPhotoChange(e)}
+                            className="hidden"
+                            ref={fileInputRef}
+                          />
+                          <FileUploadRoundedIcon />
+
+                          <span>Carica etichetta</span>
+                        </label>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

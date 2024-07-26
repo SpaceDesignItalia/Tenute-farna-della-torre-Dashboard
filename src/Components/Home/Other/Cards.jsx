@@ -5,8 +5,7 @@ import { API_URL } from "../../../API/API";
 export default function Cards() {
   const [statsData, setStatsData] = useState({
     usersNumber: 0,
-    customersNumber: 0,
-    ordersNumber: 0,
+    productsInStock: 0,
   });
 
   useEffect(() => {
@@ -16,24 +15,17 @@ export default function Cards() {
         usersNumber: res.data.analytic[0].CustomersNumber,
       }));
     });
-    axios.get(API_URL + "/Analytic/GetCustomersNumber").then((res) => {
+    axios.get(API_URL + "/Analytic/GetStocksNumber").then((res) => {
       setStatsData((prevData) => ({
         ...prevData,
-        customersNumber: res.data,
-      }));
-    });
-    axios.get(API_URL + "/Analytic/GetOrdersNumber").then((res) => {
-      setStatsData((prevData) => ({
-        ...prevData,
-        ordersNumber: res.data,
+        productsInStock: res.data.analytic[0].StocksNumber,
       }));
     });
   }, []);
 
   const stats = [
     { name: "Clienti registrati", stat: statsData.usersNumber },
-    { name: "Clienti", stat: statsData.customersNumber },
-    { name: "Ordini", stat: statsData.ordersNumber },
+    { name: "Prodotti in magazzino", stat: statsData.productsInStock },
   ];
 
   function classNames(...classes) {

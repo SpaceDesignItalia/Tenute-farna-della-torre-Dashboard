@@ -25,24 +25,27 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { API_URL } from "../../../API/API";
 import axios from "axios";
-import SidePanel from "../Other/SidePanel";
 
 const columns = [
-  { name: "Nome completo", uid: "name", sortable: true },
-  { name: "Email", uid: "mail", sortable: true },
-  { name: "Phone", uid: "phone", sortable: true },
-  { name: "Stato", uid: "status", sortable: true },
+  { name: "ID", uid: "id", sortable: true },
+  { name: "Prodotto", uid: "productName", sortable: true },
+  { name: "Quantità in magazzino", uid: "productAmount", sortable: true },
+  { name: "Prezzo (€)", uid: "unitPrice", sortable: true },
+  { name: "Codice sconto", uid: "discountCode", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
 
-const INITIAL_VISIBLE_COLUMNS = ["name", "mail", "phone", "status", "actions"];
+const INITIAL_VISIBLE_COLUMNS = [
+  "id",
+  "productName",
+  "productAmount",
+  "unitPrice",
+  "discountCode",
+  "actions",
+];
 
-export default function CustomerTable() {
-  const [open, setOpen] = useState({
-    open: false,
-    customerId: 0,
-  });
-  const [customers, setCustomers] = useState([]);
+export default function ProductTable() {
+  const [products, setProducts] = useState([]);
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
@@ -61,8 +64,8 @@ export default function CustomerTable() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    axios.get(API_URL + "/Customer/GetAll").then((res) => {
-      setCustomers(res.data);
+    axios.get(API_URL + "/Products/GetAll").then((res) => {
+      setProducts(res.data);
       // Imposta la pagina su 1 dopo aver recuperato i dati
       setPage(1);
     });
@@ -73,19 +76,17 @@ export default function CustomerTable() {
 
     if (filterValue === "") {
       // Se il valore di ricerca è vuoto, carica nuovamente tutti i prodotti
-      axios.get(API_URL + "/Customer/GetAll").then((res) => {
-        setCustomers(res.data);
+      axios.get(API_URL + "/Products/GetAll").then((res) => {
+        setProducts(res.data);
       });
     } else {
       axios
-        .get(API_URL + `/Customer/GetCustomerByEmail`, {
-          params: { customerEmail: filterValue },
-        })
+        .get(API_URL + `/Products/GetProductByName/${filterValue}`)
         .then((res) => {
-          setCustomers(res.data);
+          setProducts(res.data);
         })
         .catch((err) => {
-          setCustomers([]);
+          setProducts([]);
         });
     }
   }
@@ -108,14 +109,14 @@ export default function CustomerTable() {
     );
   }, [visibleColumns]);
 
-  const pages = Math.ceil(customers.length / rowsPerPage);
+  const pages = Math.ceil(products.length / rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-    return customers.slice(start, end);
-  }, [page, customers, rowsPerPage]);
+    return products.slice(start, end);
+  }, [page, products, rowsPerPage]);
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
@@ -127,54 +128,56 @@ export default function CustomerTable() {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((customer, columnKey) => {
-    const cellValue = customer[columnKey];
+  const renderCell = React.useCallback((product, columnKey) => {
+    const cellValue = product[columnKey];
 
     switch (columnKey) {
-      case "name":
-        return <div>{customer.name + " " + customer.surname}</div>;
-      case "mail":
-        return <div>{customer.mail}</div>;
-      case "phone":
-        return <div>{customer.phone}</div>;
-      case "status":
-        if (customer.idStatus === 1) {
-          return (
-            <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
-              {customer.status}
-            </span>
-          );
-        } else if (customer.idStatus === 2) {
-          return (
-            <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
-              {customer.status}
-            </span>
-          );
-        } else {
-          return (
-            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-              {customer.status}
-            </span>
-          );
-        }
+      case "id":
+        return <div>{product.idProduct}</div>;
+      case "productName":
+        return <div>{product.productName}</div>;
+      case "productAmount":
+        return <div>{product.productAmount}</div>;
+      case "unitPrice":
+        return <div>€ {product.unitPrice.toFixed(2)}</div>;
+      case "discountCode":
+        return (
+          <div>
+            {product.discountCode !== null ? (
+              <Link
+                href={
+                  "/discounts/visualize-discount/" +
+                  product.idDiscount +
+                  "/" +
+                  product.discountCode
+                }
+              >
+                {product.discountCode}
+              </Link>
+            ) : (
+              <>Non scontato</>
+            )}
+          </div>
+        );
 
       case "actions":
         return (
-          <>
-            <Button
-              isIconOnly
-              variant="light"
-              onClick={() =>
-                setOpen({
-                  ...open,
-                  open: true,
-                  customerId: customer.id,
-                })
-              }
-            >
-              <MoreVertIcon />
-            </Button>
-          </>
+          <Dropdown radius="sm">
+            <DropdownTrigger>
+              <Button isIconOnly size="sm" variant="light">
+                <MoreVertIcon />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu>
+              <DropdownItem
+                startContent={<RemoveRedEyeOutlinedIcon />}
+                target="blank"
+                href={`https://www.tenutefarina.it/store/product/${product.idProduct}/${product.productName}`}
+              >
+                Visualizza
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         );
       default:
         return cellValue;
@@ -187,7 +190,7 @@ export default function CustomerTable() {
         <div className="flex flex-col lg:flex-row justify-between gap-3 lg:items-end">
           <Input
             className="lg:w-1/3"
-            placeholder="Cerca cliente per email"
+            placeholder="Cerca per nome prodotto"
             variant="bordered"
             size="sm"
             startContent={<SearchRoundedIcon />}
@@ -196,7 +199,7 @@ export default function CustomerTable() {
         </div>
       </div>
     );
-  }, [statusFilter, visibleColumns, customers.length]);
+  }, [statusFilter, visibleColumns, products.length]);
 
   const bottomContent = React.useMemo(() => {
     return (
@@ -216,7 +219,6 @@ export default function CustomerTable() {
 
   return (
     <>
-      <SidePanel open={open} setOpen={setOpen} />
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={alertData.isOpen}
@@ -266,9 +268,12 @@ export default function CustomerTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"Nessun cliente presente"} items={sortedItems}>
+        <TableBody
+          emptyContent={"Nessun prodotto presente in magazzino"}
+          items={sortedItems}
+        >
           {(item) => (
-            <TableRow key={item.idCustomer}>
+            <TableRow key={item.idProduct}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

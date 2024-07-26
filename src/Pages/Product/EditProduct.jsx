@@ -181,7 +181,6 @@ export default function EditProduct() {
   }
   // Function to handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
     const trimmedProductName = product.productName.trim();
 
     const formData = new FormData();
@@ -204,6 +203,8 @@ export default function EditProduct() {
         formData
       );
       setIsAddingProduct(true);
+
+      console.log(response);
 
       if (response.status === 200) {
         setAlertData({

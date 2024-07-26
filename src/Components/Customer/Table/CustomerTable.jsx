@@ -78,7 +78,9 @@ export default function CustomerTable() {
       });
     } else {
       axios
-        .get(API_URL + `/Customer/GetProductByName/${filterValue}`)
+        .get(API_URL + `/Customer/GetCustomerByEmail`, {
+          params: { customerEmail: filterValue },
+        })
         .then((res) => {
           setCustomers(res.data);
         })
@@ -264,10 +266,7 @@ export default function CustomerTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody
-          emptyContent={"Nessun prodotto presente in magazzino"}
-          items={sortedItems}
-        >
+        <TableBody emptyContent={"Nessun cliente presente"} items={sortedItems}>
           {(item) => (
             <TableRow key={item.idCustomer}>
               {(columnKey) => (

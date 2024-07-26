@@ -79,11 +79,12 @@ export default function EditProduct() {
   function handleProductName(e) {
     setProduct({ ...product, productName: e.target.value });
   }
-
-  const handleProductDescription = (text) => {
-    setProduct({ ...product, productDescription: text });
+  const handleProductDescription = (value) => {
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      productDescription: value,
+    }));
   };
-
   function handleProductAmount(e) {
     let value = e.target.value.replace(/[^\d]/g, ""); // Rimuovi tutti i caratteri non numerici
 
@@ -253,6 +254,7 @@ export default function EditProduct() {
     URL.revokeObjectURL(url); // Free up the URL resource when it's no longer needed
   };
 
+  console.log(product);
   return (
     <>
       <Snackbar
@@ -295,7 +297,7 @@ export default function EditProduct() {
                       size="sm"
                       radius="sm"
                       className="lg:w-1/2"
-                      onChange={handleProductName}
+                      onChange={(e) => handleProductName(e)}
                       value={product.productName}
                     />
                   </div>
@@ -310,17 +312,11 @@ export default function EditProduct() {
                   </label>
                   <div className="mt-2 h-auto sm:col-span-1 sm:mt-0">
                     <ReactQuill
-                      className="h-1/2"
-                      theme="snow"
-                      modules={modules}
-                      formats={formats}
-                      placeholder="Descrizione prodotto"
                       value={product.productDescription}
                       onChange={handleProductDescription}
+                      modules={modules}
+                      formats={formats}
                     />
-                    <p className="mt-3 text-sm leading-6 text-gray-600">
-                      Inserisci una descrizione del prodotto
-                    </p>
                   </div>
                 </div>
 
@@ -342,7 +338,7 @@ export default function EditProduct() {
                       endContent="Pz."
                       onKeyPress={handleKeyPress}
                       value={product.productAmount}
-                      onChange={handleProductAmount}
+                      onChange={(e) => handleProductAmount(e)}
                     />
                   </div>
 
@@ -363,7 +359,7 @@ export default function EditProduct() {
                       endContent="€"
                       onKeyPress={handleKeyPressPrice}
                       value={product.unitPrice}
-                      onChange={(e) => handleUnitPrice}
+                      onChange={(e) => handleUnitPrice(e)}
                     />
                   </div>
                 </div>

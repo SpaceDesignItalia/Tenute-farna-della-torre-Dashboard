@@ -10,7 +10,7 @@ import DiscountOutlinedIcon from "@mui/icons-material/DiscountOutlined";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import axios from "axios";
 import { API_URL } from "../../API/API";
-import { Spinner } from "@nextui-org/react";
+import { Chip, Spinner } from "@nextui-org/react";
 
 const navigation = [
   {
@@ -72,6 +72,7 @@ export default function Sidebar() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState("/");
+  const [usersNumber, setUsersNumber] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
@@ -85,6 +86,11 @@ export default function Sidebar() {
           surname: res.data.staffer.surname,
         });
       });
+
+    axios.get(API_URL + "/Analytic/GetUsersToVerify").then((res) => {
+      console.log(res.data);
+      setUsersNumber(res.data[0].UsersNumber);
+    });
 
     setCurrentUrl(location.pathname);
   }, [location.pathname]);
@@ -190,6 +196,16 @@ export default function Sidebar() {
                                     aria-hidden="true"
                                   />
                                   {item.name}
+                                  {item.name == "Clienti" &&
+                                    usersNumber !== 0 && (
+                                      <Chip
+                                        color="primary"
+                                        variant="flat"
+                                        radius="sm"
+                                      >
+                                        {usersNumber}
+                                      </Chip>
+                                    )}
                                 </a>
                               </li>
                             ))}
@@ -253,6 +269,11 @@ export default function Sidebar() {
                             aria-hidden="true"
                           />
                           {item.name}
+                          {item.name == "Clienti" && usersNumber !== 0 && (
+                            <Chip color="primary" variant="flat" radius="sm">
+                              {usersNumber}
+                            </Chip>
+                          )}
                         </a>
                       </li>
                     ))}

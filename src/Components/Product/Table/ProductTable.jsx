@@ -25,6 +25,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { API_URL } from "../../../API/API";
 import axios from "axios";
+import ConfirmDeleteProductModal from "../Other/ConfirmDeleteProductModal";
 
 const columns = [
   { name: "ID", uid: "id", sortable: true },
@@ -60,6 +61,10 @@ export default function ProductTable() {
     variant: "",
     title: "",
     message: "",
+  });
+  const [modalDeleteData, setModalDeleteData] = useState({
+    Product: null,
+    open: false,
   });
   const [page, setPage] = useState(1);
 
@@ -203,7 +208,13 @@ export default function ProductTable() {
               <DropdownItem
                 className="text-danger"
                 color="danger"
-                onClick={() => deleteProduct(product.idProduct)}
+                onClick={() =>
+                  setModalDeleteData({
+                    ...modalDeleteData,
+                    open: true,
+                    Product: product,
+                  })
+                }
                 startContent={<DeleteOutlineRoundedIcon />}
               >
                 Rimuovi
@@ -271,6 +282,13 @@ export default function ProductTable() {
           {alertData.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmDeleteProductModal
+        isOpen={modalDeleteData.open}
+        isClosed={() => setModalDeleteData({ ...modalDeleteData, open: false })}
+        ProductData={modalDeleteData.Product}
+        DeleteCustomer={deleteProduct}
+      />
 
       {alertData.isOpen && (
         <Backdrop

@@ -43,7 +43,8 @@ export default function EditProduct() {
   const [initialProduct, setInitialProduct] = useState({});
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [photo, setPhoto] = useState([]);
-  const [labelPhoto, setLabelPhoto] = useState(null);
+  const [labelPhoto, setLabelPhoto] = useState(null); // Initialize as null
+  const [deletedLabel, setDeletedLabel] = useState(false);
   const fileInputRef = useRef(null);
   const [alertData, setAlertData] = useState({
     isOpen: false,
@@ -58,7 +59,6 @@ export default function EditProduct() {
       .get(API_URL + "/Products/GetProductByNameAndId/" + id + "/" + name)
       .then((res) => {
         const initialProductData = res.data[0];
-
         setProduct({
           productName: initialProductData.productName,
           productDescription: initialProductData.productDescription,
@@ -76,67 +76,53 @@ export default function EditProduct() {
       setPhoto(res.data);
     });
     axios.get(API_URL + "/Products/GetProductLabelById/" + id).then((res) => {
-      setLabelPhoto(res.data);
+      // Set label photo or null if not available
+      setLabelPhoto(res.data ? res.data : null);
     });
-  }, []);
+  }, [id, name]);
 
   function handleProductName(e) {
     setProduct({ ...product, productName: e.target.value });
   }
+
   const handleProductDescription = (value) => {
     setProduct((prevProduct) => ({
       ...prevProduct,
       productDescription: value,
     }));
   };
+
   function handleProductAmount(e) {
-    let value = e.target.value.replace(/[^\d]/g, ""); // Rimuovi tutti i caratteri non numerici
-
-    const numericValue = parseInt(value); // Converte il valore in un numero intero
-
-    // Se il valore è un numero intero positivo, aggiorna lo stato
+    let value = e.target.value.replace(/[^\d]/g, ""); // Remove non-numeric characters
+    const numericValue = parseInt(value); // Convert to integer
     if (!isNaN(numericValue) && numericValue >= 0) {
       setProduct({ ...product, productAmount: value });
     }
   }
 
   function handleUnitPrice(e) {
-    // Rimuovi i caratteri non numerici (e il punto) dall'input
-    let value = e.target.value.replace(/[^\d.]/g, "");
-
-    // Se il valore contiene solo numeri e al massimo un punto, aggiorna lo stato
+    let value = e.target.value.replace(/[^\d.]/g, ""); // Remove non-numeric characters (except dot)
     if (/^\d*\.?\d*$/.test(value)) {
       setProduct({ ...product, unitPrice: value });
     }
   }
 
-  // Function to handle removal of existing photo
-
   const handleRemovePhoto = (index) => {
-    // Rimuovi la foto corrispondente all'indice dall'array
     const updatedPhotos = [...photo];
     updatedPhotos.splice(index, 1);
     setPhoto(updatedPhotos);
   };
 
-  // Function to handle file selection for new photos
   const handleFileChange = (e) => {
     const selectedFiles = e.target.files;
-
-    // Limit the number of selected files to 5
     const selectedFilesArray = Array.from(selectedFiles).slice(0, 5);
-
-    // Convert each file to an object with additional properties if needed
     const photoObjects = selectedFilesArray.map((file) => ({
       file,
-      // You can add more properties here, such as a caption or other metadata
     }));
-
     setPhoto((prevPhotos) => [...prevPhotos, ...photoObjects]);
   };
 
   const handleKeyPress = (e) => {
-    // Permette solo i numeri e il tasto Backspace
     const isValidKey = /^\d$/.test(e.key) || e.key === "Backspace";
     if (!isValidKey) {
       e.preventDefault();
@@ -145,13 +131,8 @@ export default function EditProduct() {
 
   const handleKeyPressPrice = (e) => {
     const { value } = e.target;
-    // Controlla se il punto è già presente nella stringa
     const hasDecimalPoint = value.includes(".");
-
-    // Permette solo i numeri, la virgola e il tasto Backspace
     const isValidKey = /^[\d.]$/.test(e.key) || e.key === "Backspace";
-
-    // Consenti l'inserimento del punto solo se non è già presente nella stringa
     if (!isValidKey || (e.key === "." && hasDecimalPoint)) {
       e.preventDefault();
     }
@@ -183,19 +164,22 @@ export default function EditProduct() {
       return false;
     }
   }
-  // Function to handle form submission
+
   const handleSubmit = async (e) => {
     const trimmedProductName = product.productName.trim();
-
     const formData = new FormData();
     formData.append("productName", trimmedProductName);
     formData.append("productDescription", product.productDescription);
     formData.append("productAmount", product.productAmount);
     formData.append("unitPrice", product.unitPrice);
-    formData.append("productLabel", labelPhoto);
+    // Add the labelPhoto to the FormData if it's not null
+    if (labelPhoto) {
+      formData.append("productLabel", labelPhoto);
+    }
 
-    console.log(labelPhoto);
-
+    if (deletedLabel) {
+      formData.append("deletedLabel", deletedLabel);
+    }
     // Add existing photos
     photo.forEach((photo) => {
       formData.append("oldPhotos", photo.productImagePath);
@@ -251,22 +235,22 @@ export default function EditProduct() {
     const svgData = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([svgData], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
-
     const downloadLink = document.createElement("a");
     downloadLink.download = "QR_" + name + ".svg";
     downloadLink.href = url;
     downloadLink.click();
-
     URL.revokeObjectURL(url); // Free up the URL resource when it's no longer needed
   };
 
   const handleLabelPhotoChange = (e) => {
     const selectedFile = e.target.files[0];
     setLabelPhoto(selectedFile);
+    setDeletedLabel(false);
   };
 
   const handleRemoveLabelPhoto = () => {
-    setLabelPhoto(null);
+    setLabelPhoto(null); // Set to null if label photo is removed
+    setDeletedLabel(true);
   };
   return (
     <>

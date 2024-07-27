@@ -109,12 +109,12 @@ export default function AddProduct() {
 
   function enableSubmit() {
     if (
-      (newProduct.productName !== "" &&
-        newProduct.productDescription !== "" &&
-        newProduct.productAmount !== 0 &&
-        newProduct.unitPrice !== 0 &&
-        photos.length !== 0) ||
-      (isWine !== true && labelPhoto !== null)
+      newProduct.productName.trim() !== "" &&
+      newProduct.productDescription.trim() !== "" &&
+      newProduct.productAmount > 0 &&
+      newProduct.unitPrice > 0 &&
+      photos.length > 0 &&
+      (!isWine || (isWine && labelPhoto))
     ) {
       return false;
     }
@@ -135,25 +135,17 @@ export default function AddProduct() {
   }
 
   const handleAddProduct = async () => {
-    // Imposta il titolo e il messaggio della notifica
-    setAlertData({
-      ...alertData,
-      isOpen: true,
-      variant: "success",
-      title: "Prodotto aggiunto",
-      message: "Il prodotto è stato aggiunto con successo",
-    });
+    setIsAddingProduct(true);
 
-    const trimmedProductName = newProduct.productName.trim();
     const formData = new FormData();
-
-    // Aggiungi i dati del nuovo prodotto
-    formData.append("productName", trimmedProductName);
+    formData.append("productName", newProduct.productName.trim());
     formData.append("productDescription", newProduct.productDescription);
     formData.append("productAmount", newProduct.productAmount);
     formData.append("unitPrice", newProduct.unitPrice);
     formData.append("isDiscount", newProduct.isDiscount);
-    formData.append("productLabel", labelPhoto);
+    if (labelPhoto) {
+      formData.append("productLabel", labelPhoto);
+    }
 
     // Aggiungi le immagini del prodotto
     photos.forEach((photo, index) => {
@@ -165,18 +157,41 @@ export default function AddProduct() {
         API_URL + "/Products/CreateProduct",
         formData
       );
-      setIsAddingProduct(true);
       if (response.status === 201) {
+        setAlertData({
+          ...alertData,
+          isOpen: true,
+          variant: "success",
+          title: "Prodotto aggiunto",
+          message: "Il prodotto è stato aggiunto con successo",
+        });
         setTimeout(() => {
           window.location.href = "/products";
         }, 1000);
+      } else {
+        setAlertData({
+          ...alertData,
+          isOpen: true,
+          variant: "error",
+          title: "Errore",
+          message: "Si è verificato un errore durante l'aggiunta del prodotto",
+        });
+        setIsAddingProduct(false);
       }
     } catch (error) {
       console.error("Errore durante l'aggiunta del prodotto", error);
+      setAlertData({
+        ...alertData,
+        isOpen: true,
+        variant: "error",
+        title: "Errore",
+        message: "Si è verificato un errore durante l'aggiunta del prodotto",
+      });
+      setIsAddingProduct(false);
     }
   };
 
-  const handleClose = (event, reason) => {
+  const handleClose = () => {
     setAlertData({
       ...alertData,
       isOpen: false,
@@ -202,7 +217,6 @@ export default function AddProduct() {
   };
 
   const handleRemovePhoto = (index) => {
-    // Rimuovi la foto corrispondente all'indice dall'array
     const updatedPhotos = [...photos];
     updatedPhotos.splice(index, 1);
     setPhotos(updatedPhotos);
@@ -216,6 +230,7 @@ export default function AddProduct() {
   const handleRemoveLabelPhoto = () => {
     setLabelPhoto(null);
   };
+
   return (
     <>
       <Snackbar
@@ -277,7 +292,6 @@ export default function AddProduct() {
                       onChange={handleProductDescription}
                       value={newProduct.productDescription || ""}
                     />
-
                     <p className="mt-3 text-sm leading-6 text-gray-600">
                       Inserisci una descrizione del prodotto
                     </p>
@@ -304,7 +318,6 @@ export default function AddProduct() {
                       onKeyPress={handleKeyPress}
                     />
                   </div>
-
                   <label
                     htmlFor="price"
                     className="block text-sm font-medium leading-6 text-gray-900"
@@ -357,7 +370,7 @@ export default function AddProduct() {
                           radius="sm"
                           onClick={() => handleRemovePhoto(index)}
                         >
-                          <DeleteRoundedIcon />{" "}
+                          <DeleteRoundedIcon />
                         </Button>
                       </div>
                     ))}
@@ -417,7 +430,7 @@ export default function AddProduct() {
                             radius="sm"
                             onClick={() => handleRemoveLabelPhoto()}
                           >
-                            <DeleteRoundedIcon />{" "}
+                            <DeleteRoundedIcon />
                           </Button>
                         </div>
                       )}
@@ -429,7 +442,7 @@ export default function AddProduct() {
                             accept="image/*"
                             onChange={(e) => handleLabelPhotoChange(e)}
                             className="hidden"
-                            ref={fileInputRef}
+                            ref={fileInputRef2}
                           />
                           <FileUploadRoundedIcon />
 
@@ -454,11 +467,11 @@ export default function AddProduct() {
             <Button
               color="primary"
               radius="sm"
-              isDisabled={enableSubmit() || isAddingProduct} // Disabilita il pulsante quando è in corso l'aggiunta del prodotto
+              isDisabled={enableSubmit() || isAddingProduct}
               onClick={handleAddProduct}
               isLoading={isAddingProduct}
             >
-              {isAddingProduct ? "Aggiungendo..." : "Aggiungi prodotto"}{" "}
+              {isAddingProduct ? "Aggiungendo..." : "Aggiungi prodotto"}
             </Button>
           </div>
         </form>

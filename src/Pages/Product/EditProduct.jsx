@@ -43,6 +43,7 @@ export default function EditProduct() {
   const [initialProduct, setInitialProduct] = useState({});
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [photo, setPhoto] = useState([]);
+  const [labelPhoto, setLabelPhoto] = useState(null);
   const fileInputRef = useRef(null);
   const [alertData, setAlertData] = useState({
     isOpen: false,
@@ -73,6 +74,9 @@ export default function EditProduct() {
       });
     axios.get(API_URL + "/Products/GetProductImagesById/" + id).then((res) => {
       setPhoto(res.data);
+    });
+    axios.get(API_URL + "/Products/GetProductLabelById/" + id).then((res) => {
+      setLabelPhoto(res.data);
     });
   }, []);
 
@@ -188,6 +192,9 @@ export default function EditProduct() {
     formData.append("productDescription", product.productDescription);
     formData.append("productAmount", product.productAmount);
     formData.append("unitPrice", product.unitPrice);
+    formData.append("productLabel", labelPhoto);
+
+    console.log(labelPhoto);
 
     // Add existing photos
     photo.forEach((photo) => {
@@ -203,8 +210,6 @@ export default function EditProduct() {
         formData
       );
       setIsAddingProduct(true);
-
-      console.log(response);
 
       if (response.status === 200) {
         setAlertData({
@@ -255,7 +260,14 @@ export default function EditProduct() {
     URL.revokeObjectURL(url); // Free up the URL resource when it's no longer needed
   };
 
-  console.log(product);
+  const handleLabelPhotoChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setLabelPhoto(selectedFile);
+  };
+
+  const handleRemoveLabelPhoto = () => {
+    setLabelPhoto(null);
+  };
   return (
     <>
       <Snackbar
@@ -420,6 +432,60 @@ export default function EditProduct() {
                         ) : (
                           <span>Carica foto {photo.length + "/" + 5}</span>
                         )}
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:py-6">
+                  <label
+                    htmlFor="first-name"
+                    className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
+                  >
+                    Etichetta del prodotto
+                  </label>
+                  <div className="flex flex-col gap-10">
+                    <Alert variant="outlined" severity="warning">
+                      Dimensioni consigliate per l'immagine: <br /> 500x500
+                      pixel.
+                    </Alert>
+                    {labelPhoto !== null && (
+                      <div className="flex flex-row gap-5 items-center">
+                        <Image
+                          isBordered
+                          radius="sm"
+                          size="lg"
+                          width={200}
+                          height={200}
+                          src={
+                            labelPhoto.path
+                              ? API_URL + "/uploads/" + labelPhoto.path
+                              : URL.createObjectURL(labelPhoto)
+                          }
+                        />
+                        <Button
+                          isIconOnly
+                          className="bg-red-500 text-white"
+                          radius="sm"
+                          onClick={() => handleRemoveLabelPhoto()}
+                        >
+                          <DeleteRoundedIcon />{" "}
+                        </Button>
+                      </div>
+                    )}
+
+                    {!labelPhoto && (
+                      <label className="relative inline-flex justify-center items-center bg-primary dark:text-black text-white px-4 py-2 rounded-md cursor-pointer w-full">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleLabelPhotoChange(e)}
+                          className="hidden"
+                          ref={fileInputRef}
+                        />
+                        <FileUploadRoundedIcon />
+
+                        <span>Carica etichetta</span>
                       </label>
                     )}
                   </div>

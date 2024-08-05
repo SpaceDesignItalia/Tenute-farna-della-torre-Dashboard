@@ -28,7 +28,7 @@ import { API_URL } from "../../../API/API";
 
 const columns = [
   { name: "Codice", uid: "cod", sortable: true },
-  { name: "Tipo", uid: "discountType", sortable: true },
+  { name: "Tipo", uid: "discounttype", sortable: true },
   { name: "Valore", uid: "discountValue", sortable: true },
   { name: "Data inizio", uid: "startDate", sortable: true },
   { name: "Data fine", uid: "endDate", sortable: true },
@@ -66,6 +66,7 @@ export default function DiscountTable() {
 
   useEffect(() => {
     axios.get(API_URL + "/Discounts/GetAll").then((res) => {
+      console.log(res.data);
       setProducts(res.data);
     });
   }, []);
@@ -123,6 +124,7 @@ export default function DiscountTable() {
       axios
         .get(API_URL + `/Discounts/GetDiscountByCode/${filterValue}`)
         .then((res) => {
+          console.log(res.data);
           setProducts(res.data);
         })
         .catch((err) => {
@@ -352,7 +354,7 @@ export default function DiscountTable() {
         </TableHeader>
         <TableBody emptyContent={"Nessuno sconto trovato"} items={sortedItems}>
           {(item) => (
-            <TableRow key={item.discountCode}>
+            <TableRow key={item.idDiscount}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

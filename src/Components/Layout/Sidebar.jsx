@@ -8,6 +8,7 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import DiscountOutlinedIcon from "@mui/icons-material/DiscountOutlined";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import axios from "axios";
 import { API_URL } from "../../API/API";
 import { Chip, Spinner } from "@nextui-org/react";
@@ -41,6 +42,12 @@ const navigation = [
     href: "/customers",
     icon: PeopleAltOutlinedIcon,
     subRoutes: [], // Aggiungi le sottoroute qui se necessario
+  },
+  {
+    name: "Ordini",
+    href: "/orders",
+    icon: LocalShippingOutlinedIcon,
+    subRoutes: ["/orders/add-order", "/orders/visualize-order/"], // Aggiungi le sottoroute qui se necessario
   },
 ];
 

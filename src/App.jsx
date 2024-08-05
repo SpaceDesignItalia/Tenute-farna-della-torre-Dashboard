@@ -15,6 +15,7 @@ import VisualizeDiscount from "./Pages/Discount/VisualizeDiscount";
 import Login from "./Pages/Login/Login";
 import Settings from "./Pages/Settings/Settings";
 import CustomerDashboard from "./Pages/Customer/CustomerDashboard";
+import OrderDashboard from "./Pages/Order/OrderDashboard";
 
 export default function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -96,6 +97,7 @@ export default function App() {
             path="/discounts/visualize-discount/:id/:code"
             element={<VisualizeDiscount />}
           />
+          <Route exact path="/orders" element={<OrderDashboard />} />
           <Route exact path="/customers" element={<CustomerDashboard />} />
           <Route exact path="/settings" element={<Settings />} />
         </Route>

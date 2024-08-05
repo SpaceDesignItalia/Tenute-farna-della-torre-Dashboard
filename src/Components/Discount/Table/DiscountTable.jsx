@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -8,59 +8,52 @@ import {
   TableCell,
   Input,
   Button,
-  Dropdown,
   DropdownTrigger,
+  Dropdown,
   DropdownMenu,
   DropdownItem,
   Pagination,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalContent,
+  Link,
   Spinner,
-  Chip,
 } from "@nextui-org/react";
-import { AlertTitle, Alert, Snackbar } from "@mui/material";
+import { AlertTitle, Alert, Snackbar, Backdrop } from "@mui/material";
 import dayjs from "dayjs";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
 import axios from "axios";
 import { API_URL } from "../../../API/API";
 
 const columns = [
-  { name: "ID Ordine", uid: "idOrder", sortable: true },
-  { name: "Cliente", uid: "customerName", sortable: true },
-  { name: "Totale", uid: "total", sortable: true },
-  { name: "Pagamento", uid: "paid", sortable: true },
-  { name: "Spedito", uid: "shipped", sortable: true },
-  { name: "Data Creazione", uid: "createdDatetime", sortable: true },
+  { name: "Codice", uid: "cod", sortable: true },
+  { name: "Tipo", uid: "discountType", sortable: true },
+  { name: "Valore", uid: "discountValue", sortable: true },
+  { name: "Data inizio", uid: "startDate", sortable: true },
+  { name: "Data fine", uid: "endDate", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "idOrder",
-  "customerName",
-  "total",
-  "paid",
-  "shipped",
-  "createdDatetime",
+  "cod",
+  "discountType",
+  "discountValue",
+  "startDate",
+  "endDate",
   "actions",
 ];
 
-export default function OrderTable() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [filterValue, setFilterValue] = useState("");
-  const [visibleColumns, setVisibleColumns] = useState(
+export default function DiscountTable() {
+  const [products, setProducts] = useState([]);
+  const [filterValue, setFilterValue] = React.useState("");
+  const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [sortDescriptor, setSortDescriptor] = useState({
-    column: "idOrder",
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [sortDescriptor, setSortDescriptor] = React.useState({
+    column: "age",
     direction: "ascending",
   });
   const [alertData, setAlertData] = useState({
@@ -69,374 +62,304 @@ export default function OrderTable() {
     title: "",
     message: "",
   });
-  const [page, setPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [trackingLink, setTrackingLink] = useState("");
+  const [page, setPage] = React.useState(1);
 
   useEffect(() => {
-    if (filterValue) {
-      fetchOrderById(filterValue);
-    } else {
-      fetchOrders();
-    }
-  }, [filterValue]);
-
-  const fetchOrders = async () => {
-    setIsLoading(true);
-    try {
-      const { data: ordersData } = await axios.get(
-        `${API_URL}/Order/GetAllOrders`
-      );
-
-      const enhancedOrders = await Promise.all(
-        ordersData.map(async (order) => {
-          const { data: customerData } = await axios.get(
-            `${API_URL}/Customer/GetCustomerById/${order.idCustomer}`
-          );
-          const { data: paymentData } = await axios.get(
-            `${API_URL}/Payment/GetCheckoutDetails`,
-            { params: { idPayment: order.idPayment } }
-          );
-          const { data: addressData } = await axios.get(
-            `${API_URL}/Customer/GetShippingInfoById/${order.idShippingDetail}`
-          );
-          const { data: productData } = await axios.get(
-            `${API_URL}/Order/GetProductsByIdOrder`,
-            { params: { idOrder: order.idOrder } }
-          );
-
-          return {
-            ...order,
-            customerName: `${customerData.name} ${customerData.surname}`,
-            address: `${addressData.address} ${addressData.civicNumber} ${addressData.city} ${addressData.cap} ${addressData.province} ${addressData.nation}`,
-            total: productData.reduce(
-              (acc, product) => acc + product.price * product.amount,
-              0
-            ),
-            products: productData,
-            paid: paymentData.paid,
-          };
-        })
-      );
-
-      setOrders(enhancedOrders);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchOrderById = async (id) => {
-    setIsLoading(true);
-    try {
-      const { data: orderData } = await axios.get(
-        `${API_URL}/Order/GetOrderById`,
-        { params: { idOrder: id } }
-      );
-
-      if (!orderData || orderData.length === 0) {
-        setOrders([]);
-      } else {
-        const order = orderData[0];
-        const { data: customerData } = await axios.get(
-          `${API_URL}/Customer/GetCustomerById/${order.idCustomer}`
-        );
-        const { data: paymentData } = await axios.get(
-          `${API_URL}/Payment/GetCheckoutDetails`,
-          { params: { idPayment: order.idPayment } }
-        );
-        const { data: addressData } = await axios.get(
-          `${API_URL}/Customer/GetShippingInfoById/${order.idShippingDetail}`
-        );
-        const { data: productData } = await axios.get(
-          `${API_URL}/Order/GetProductsByIdOrder`,
-          { params: { idOrder: order.idOrder } }
-        );
-
-        const enhancedOrder = {
-          ...order,
-          customerName: `${customerData.name} ${customerData.surname}`,
-          address: `${addressData.address} ${addressData.civicNumber} ${addressData.city} ${addressData.cap} ${addressData.province} ${addressData.nation}`,
-          total: productData.reduce(
-            (acc, product) => acc + product.price * product.amount,
-            0
-          ),
-          products: productData,
-          paid: paymentData.paid,
-        };
-
-        setOrders([enhancedOrder]);
-      }
-    } catch (error) {
-      console.error("Error fetching order by ID:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    axios.get(API_URL + "/Discounts/GetAll").then((res) => {
+      setProducts(res.data);
+    });
+  }, []);
 
   const hasSearchFilter = Boolean(filterValue);
 
-  const headerColumns = useMemo(
-    () =>
-      visibleColumns === "all"
-        ? columns
-        : columns.filter((column) => visibleColumns.has(column.uid)),
-    [visibleColumns]
-  );
+  const headerColumns = React.useMemo(() => {
+    if (visibleColumns === "all") return columns;
 
-  const pages = Math.ceil(orders.length / rowsPerPage);
+    return columns.filter((column) =>
+      Array.from(visibleColumns).includes(column.uid)
+    );
+  }, [visibleColumns]);
 
-  const items = useMemo(
-    () => orders.slice((page - 1) * rowsPerPage, page * rowsPerPage),
-    [page, orders, rowsPerPage]
-  );
+  const filteredItems = React.useMemo(() => {
+    let filteredProducts = [...products];
 
-  const sortedItems = useMemo(
-    () =>
-      [...items].sort((a, b) => {
-        const cmp =
-          a[sortDescriptor.column] < b[sortDescriptor.column]
-            ? -1
-            : a[sortDescriptor.column] > b[sortDescriptor.column]
-            ? 1
-            : 0;
-        return sortDescriptor.direction === "descending" ? -cmp : cmp;
-      }),
-    [sortDescriptor, items]
-  );
+    if (hasSearchFilter) {
+      filteredProducts = filteredProducts.filter((product) =>
+        product.name.toLowerCase().includes(filterValue.toLowerCase())
+      );
+    }
 
-  const searchOrder = useCallback((value) => {
-    setFilterValue(value);
+    return filteredProducts;
+  }, [products, filterValue, statusFilter]);
+
+  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+
+  const items = React.useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems.slice(start, end);
+  }, [page, filteredItems, rowsPerPage]);
+
+  const sortedItems = React.useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column];
+      const second = b[sortDescriptor.column];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
+
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
+
+  function searchProduct(e) {
+    const filterValue = e;
+
+    if (filterValue === "") {
+      // Se il valore di ricerca è vuoto, carica nuovamente tutti i prodotti
+      axios.get(API_URL + "/Discounts/GetAll").then((res) => {
+        setProducts(res.data);
+      });
+    } else {
+      axios
+        .get(API_URL + `/Discounts/GetDiscountByCode/${filterValue}`)
+        .then((res) => {
+          setProducts(res.data);
+        })
+        .catch((err) => {
+          setProducts([]);
+        });
+    }
+  }
+
+  function deleteDiscount(id) {
+    axios.delete(API_URL + `/Discounts/DeleteDiscount/${id}`).then((res) => {
+      setAlertData({
+        ...alertData,
+        isOpen: true,
+        variant: "success",
+        title: "Prodotto rimosso",
+        message: "Il prodotto è stato rimosso con successo dal magazzino!",
+      });
+
+      if (res.status === 200) {
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      }
+    });
+  }
+
+  const handleClose = (event, reason) => {
+    setAlertData({
+      ...alertData,
+      isOpen: false,
+      variant: "",
+      title: "",
+      message: "",
+    });
+  };
+
+  const renderCell = React.useCallback((discount, columnKey) => {
+    const cellValue = discount[columnKey];
+
+    switch (columnKey) {
+      case "cod":
+        return (
+          <div>
+            {discount.discountCode !== null ? (
+              discount.discountCode
+            ) : (
+              <>Non previsto</>
+            )}
+          </div>
+        );
+      case "discountType":
+        return <div>{discount.typeName}</div>;
+      case "discountValue":
+        return (
+          <div>
+            {discount.idDiscountType === 1 ? (
+              <>€ {discount.value.toFixed(2)}</>
+            ) : (
+              <>{discount.value}%</>
+            )}
+          </div>
+        );
+      case "startDate":
+        return <div>{dayjs(discount.startDate).format("DD/MM/YYYY")}</div>;
+      case "endDate":
+        return (
+          <div>
+            {discount.endDate === null ? (
+              <p className="text-2xl">♾️</p>
+            ) : (
+              dayjs(discount.endDate).format("DD/MM/YYYY")
+            )}
+          </div>
+        );
+      case "actions":
+        return (
+          <div className="relative flex items-center gap-2">
+            <Dropdown radius="sm">
+              <DropdownTrigger>
+                <Button isIconOnly size="sm" variant="light">
+                  <MoreVertIcon />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem
+                  startContent={<RemoveRedEyeOutlinedIcon />}
+                  href={`/discounts/visualize-discount/${discount.idDiscount}/${discount.discountCode}`}
+                >
+                  Visualizza
+                </DropdownItem>
+
+                <DropdownItem
+                  className="text-danger"
+                  color="danger"
+                  onClick={() => deleteDiscount(discount.idDiscount)}
+                  startContent={<DeleteOutlineRoundedIcon />}
+                >
+                  Rimuovi
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        );
+      default:
+        return cellValue;
+    }
+  }, []);
+
+  const onRowsPerPageChange = React.useCallback((e) => {
+    setRowsPerPage(Number(e.target.value));
     setPage(1);
   }, []);
 
-  const deleteOrder = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/Order/DeleteOrder`, {
-        params: { idOrder: id },
-      });
-      setAlertData({
-        isOpen: true,
-        variant: "success",
-        title: "Ordine rimosso",
-        message: "L'ordine è stato rimosso con successo!",
-      });
-      fetchOrders();
-    } catch (error) {
-      console.error("Error deleting order:", error);
+  const onSearchChange = React.useCallback((value) => {
+    if (value) {
+      setFilterValue(value);
+      setPage(1);
+    } else {
+      setFilterValue("");
     }
-  };
+  }, []);
 
-  const handleClose = () => {
-    setAlertData((prev) => ({ ...prev, isOpen: false }));
-  };
+  const onClear = React.useCallback(() => {
+    setFilterValue("");
+    setPage(1);
+  }, []);
 
-  const openModal = (order) => {
-    setIsModalOpen(true);
-    setSelectedOrder(order);
-  };
+  const topContent = React.useMemo(() => {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col lg:flex-row justify-between gap-3 lg:items-end">
+          <Input
+            className="lg:w-1/3"
+            placeholder="Cerca per codice sconto"
+            variant="bordered"
+            size="sm"
+            startContent={<SearchRoundedIcon />}
+            onChange={(e) => searchProduct(e.target.value)}
+          />
+          <Button
+            startContent={<AddRoundedIcon />}
+            as={Link}
+            href="/discounts/add-discount"
+            color="primary"
+            radius="sm"
+          >
+            Aggiungi sconto
+          </Button>
+        </div>
+      </div>
+    );
+  }, [
+    filterValue,
+    statusFilter,
+    visibleColumns,
+    onRowsPerPageChange,
+    products.length,
+    onSearchChange,
+    hasSearchFilter,
+  ]);
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedOrder(null);
-  };
-
-  const openLinkModal = (order) => {
-    setIsLinkModalOpen(true);
-    setSelectedOrder(order);
-  };
-
-  const closeLinkModal = () => {
-    setIsLinkModalOpen(false);
-    setSelectedOrder(null);
-    setTrackingLink("");
-  };
-
-  const handleAddTrackingLink = async () => {
-    try {
-      await axios.put(`${API_URL}/Order/UpdateTrackingLink`, {
-        idOrder: selectedOrder.idOrder,
-        trackingLink: trackingLink,
-      });
-      setAlertData({
-        isOpen: true,
-        variant: "success",
-        title: "Link Tracciamento Aggiornato",
-        message: "Il link di tracciamento è stato aggiunto con successo!",
-      });
-      fetchOrders();
-      closeLinkModal();
-    } catch (error) {
-      console.error("Error adding tracking link:", error);
-    }
-  };
-
-  const renderCell = useCallback(
-    (order, columnKey) => {
-      switch (columnKey) {
-        case "idOrder":
-          return order.idOrder;
-        case "customerName":
-          return order.customerName;
-        case "total":
-          return `€${order.total.toFixed(2)}`;
-        case "paid":
-          return order.paid ? "Pagato" : "Non Pagato";
-        case "shipped":
-          return order.shipped ? "Spedito" : "Non Spedito";
-        case "createdDatetime":
-          return dayjs(order.createdDatetime).format("DD/MM/YYYY HH:mm");
-        case "actions":
-          return (
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Button auto size="sm" onClick={() => openModal(order)}>
-                <RemoveRedEyeOutlinedIcon />
-              </Button>
-              <Button auto size="sm" onClick={() => openLinkModal(order)}>
-                <InsertLinkOutlinedIcon />
-              </Button>
-              <Button
-                auto
-                color="error"
-                size="sm"
-                onClick={() => deleteOrder(order.idOrder)}
-              >
-                <DeleteOutlineRoundedIcon />
-              </Button>
-            </div>
-          );
-        default:
-          return null;
-      }
-    },
-    [openModal, openLinkModal, deleteOrder]
-  );
+  const bottomContent = React.useMemo(() => {
+    return (
+      <div className="py-2 px-2 flex justify-center items-center">
+        <Pagination
+          isCompact
+          showControls
+          showShadow
+          color="primary"
+          page={page}
+          total={pages || 1}
+          onChange={setPage}
+        />
+      </div>
+    );
+  }, [page, pages, hasSearchFilter]);
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "1rem",
-        }}
-      >
-        <Input
-          placeholder="Cerca per ID Ordine"
-          value={filterValue}
-          onChange={(e) => searchOrder(e.target.value)}
-          endContent={<SearchRoundedIcon />}
-        />
-        <Button auto color="primary" onClick={() => fetchOrders()}>
-          Ricarica
-        </Button>
-      </div>
-      {isLoading ? (
-        <Spinner />
-      ) : (
-        <>
-          <Table aria-label="Ordini">
-            <TableHeader>
-              {headerColumns.map((column) => (
-                <TableColumn
-                  key={column.uid}
-                  sortDirection={
-                    sortDescriptor.column === column.uid
-                      ? sortDescriptor.direction
-                      : undefined
-                  }
-                >
-                  {column.name}
-                </TableColumn>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {sortedItems.map((order) => (
-                <TableRow key={order.idOrder}>
-                  {headerColumns.map((column) => (
-                    <TableCell key={column.uid}>
-                      {renderCell(order, column.uid)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Pagination
-            totalPages={pages}
-            onPageChange={(page) => setPage(page)}
-            page={page}
-          />
-        </>
-      )}
-      <Modal open={isModalOpen} onClose={closeModal}>
-        <ModalHeader>Dettagli Ordine</ModalHeader>
-        <ModalBody>
-          {selectedOrder && (
-            <div>
-              <h4>ID Ordine: {selectedOrder.idOrder}</h4>
-              <p>Cliente: {selectedOrder.customerName}</p>
-              <p>Totale: €{selectedOrder.total.toFixed(2)}</p>
-              <p>Pagamento: {selectedOrder.paid ? "Pagato" : "Non Pagato"}</p>
-              <p>
-                Spedito: {selectedOrder.shipped ? "Spedito" : "Non Spedito"}
-              </p>
-              <p>
-                Data Creazione:{" "}
-                {dayjs(selectedOrder.createdDatetime).format(
-                  "DD/MM/YYYY HH:mm"
-                )}
-              </p>
-              <p>Indirizzo: {selectedOrder.address}</p>
-              <p>Prodotti:</p>
-              <ul>
-                {selectedOrder.products.map((product) => (
-                  <li key={product.idProduct}>
-                    {product.name} - {product.amount} x €
-                    {product.price.toFixed(2)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button auto onClick={closeModal}>
-            Chiudi
-          </Button>
-        </ModalFooter>
-      </Modal>
-      <Modal open={isLinkModalOpen} onClose={closeLinkModal}>
-        <ModalHeader>Aggiungi Link di Tracciamento</ModalHeader>
-        <ModalBody>
-          <Input
-            placeholder="Inserisci link di tracciamento"
-            value={trackingLink}
-            onChange={(e) => setTrackingLink(e.target.value)}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <Button auto onClick={handleAddTrackingLink}>
-            Aggiungi
-          </Button>
-          <Button auto onClick={closeLinkModal}>
-            Annulla
-          </Button>
-        </ModalFooter>
-      </Modal>
+    <>
       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={alertData.isOpen}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleClose}
       >
-        <Alert onClose={handleClose} severity={alertData.variant}>
-          <AlertTitle>{alertData.title}</AlertTitle>
+        <Alert size="lg" severity={alertData.variant} sx={{ width: "100%" }}>
+          <AlertTitle sx={{ fontWeight: "bold" }}>{alertData.title}</AlertTitle>
           {alertData.message}
         </Alert>
       </Snackbar>
-    </div>
+
+      {alertData.isOpen && (
+        <Backdrop
+          sx={{
+            backdropFilter: "blur(5px)",
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+          }}
+          open={open}
+          onClick={handleClose}
+        >
+          <Spinner color="primary" size="lg" />
+        </Backdrop>
+      )}
+      <Table
+        aria-label="Example table with custom cells, pagination and sorting"
+        isStriped
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[382px]",
+        }}
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSortChange={setSortDescriptor}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody emptyContent={"Nessuno sconto trovato"} items={sortedItems}>
+          {(item) => (
+            <TableRow key={item.discountCode}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </>
   );
 }

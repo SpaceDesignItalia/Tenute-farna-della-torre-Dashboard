@@ -19,23 +19,24 @@ import {
   ModalFooter,
   ModalContent,
   Spinner,
-  useDisclosure,
+  Chip,
 } from "@nextui-org/react";
-import { AlertTitle, Alert, Snackbar, Backdrop } from "@mui/material";
+import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import dayjs from "dayjs";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
 import axios from "axios";
 import { API_URL } from "../../../API/API";
 
 const columns = [
   { name: "ID Ordine", uid: "idOrder", sortable: true },
   { name: "Cliente", uid: "customerName", sortable: true },
-  { name: "Indirizzo", uid: "address", sortable: true },
   { name: "Totale", uid: "total", sortable: true },
   { name: "Pagamento", uid: "paid", sortable: true },
+  { name: "Spedito", uid: "shipped", sortable: true },
   { name: "Data Creazione", uid: "createdDatetime", sortable: true },
   { name: "Opzioni", uid: "actions" },
 ];
@@ -43,14 +44,15 @@ const columns = [
 const INITIAL_VISIBLE_COLUMNS = [
   "idOrder",
   "customerName",
-  "address",
   "total",
   "paid",
+  "shipped",
   "createdDatetime",
   "actions",
 ];
 
 export default function OrderTable() {
+  const [isLoading, setIsLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [filterValue, setFilterValue] = useState("");
   const [visibleColumns, setVisibleColumns] = useState(
@@ -69,50 +71,119 @@ export default function OrderTable() {
   });
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [trackingLink, setTrackingLink] = useState("");
 
   useEffect(() => {
-    fetchOrders();
+    if (filterValue) {
+      fetchOrderById(filterValue);
+    } else {
+      fetchOrders();
+    }
   }, [filterValue]);
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     try {
-      const ordersResponse = await axios.get(API_URL + `/Order/GetAllOrders`);
+      const ordersResponse = await axios.get(`${API_URL}/Order/GetAllOrders`);
       const ordersData = ordersResponse.data;
 
-      const customerResponses = await axios.all(
-        ordersData.map((order) =>
-          axios.get(API_URL + `/Customer/GetCustomerById/${order.idCustomer}`)
-        )
-      );
-      const addressResponses = await axios.all(
-        ordersData.map((order) =>
-          axios.get(
-            API_URL + `/Customer/GetShippingInfoById/${order.idShippingDetail}`
-          )
-        )
-      );
-      const productResponses = await axios.all(
-        ordersData.map((order) =>
-          axios.get(API_URL + `/Order/GetProductsByIdOrder`, {
-            params: { idOrder: order.idOrder },
-          })
-        )
-      );
+      const enhancedOrders = await Promise.all(
+        ordersData.map(async (order) => {
+          const customerResponse = await axios.get(
+            `${API_URL}/Customer/GetCustomerById/${order.idCustomer}`
+          );
+          const paymentResponse = await axios.get(
+            `${API_URL}/Payment/GetCheckoutDetails`,
+            {
+              params: { idPayment: order.idPayment },
+            }
+          );
+          const addressResponse = await axios.get(
+            `${API_URL}/Customer/GetShippingInfoById/${order.idShippingDetail}`
+          );
+          const productResponse = await axios.get(
+            `${API_URL}/Order/GetProductsByIdOrder`,
+            {
+              params: { idOrder: order.idOrder },
+            }
+          );
 
-      const enhancedOrders = ordersData.map((order, index) => ({
-        ...order,
-        customerName: `${customerResponses[index].data.name} ${customerResponses[index].data.surname}`,
-        address: `${addressResponses[index].data.address} ${addressResponses[index].data.civicNumber} ${addressResponses[index].data.city} ${addressResponses[index].data.cap} ${addressResponses[index].data.province} ${addressResponses[index].data.nation}`,
-        total: productResponses[index].data.reduce(
-          (acc, product) => acc + product.price * product.amount,
-          0
-        ),
-      }));
+          return {
+            ...order,
+            customerName: `${customerResponse.data.name} ${customerResponse.data.surname}`,
+            address: `${addressResponse.data.address} ${addressResponse.data.civicNumber} ${addressResponse.data.city} ${addressResponse.data.cap} ${addressResponse.data.province} ${addressResponse.data.nation}`,
+            total: productResponse.data.reduce(
+              (acc, product) => acc + product.price * product.amount,
+              0
+            ),
+            products: productResponse.data,
+            paid: paymentResponse.data.paid,
+          };
+        })
+      );
 
       setOrders(enhancedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchOrderById = async (id) => {
+    setIsLoading(true);
+    try {
+      const orderResponse = await axios.get(`${API_URL}/Order/GetOrderById`, {
+        params: { idOrder: id },
+      });
+
+      if (!orderResponse || !orderResponse.data) {
+        throw new Error("Invalid response format");
+      }
+
+      if (orderResponse.data.length === 0) {
+        setOrders([]);
+      } else {
+        const order = orderResponse.data[0];
+        const customerResponse = await axios.get(
+          `${API_URL}/Customer/GetCustomerById/${order.idCustomer}`
+        );
+        const paymentResponse = await axios.get(
+          `${API_URL}/Payment/GetCheckoutDetails`,
+          {
+            params: { idPayment: order.idPayment },
+          }
+        );
+        const addressResponse = await axios.get(
+          `${API_URL}/Customer/GetShippingInfoById/${order.idShippingDetail}`
+        );
+        const productResponse = await axios.get(
+          `${API_URL}/Order/GetProductsByIdOrder`,
+          {
+            params: { idOrder: order.idOrder },
+          }
+        );
+
+        const enhancedOrder = {
+          ...order,
+          customerName: `${customerResponse.data.name} ${customerResponse.data.surname}`,
+          address: `${addressResponse.data.address} ${addressResponse.data.civicNumber} ${addressResponse.data.city} ${addressResponse.data.cap} ${addressResponse.data.province} ${addressResponse.data.nation}`,
+          total: productResponse.data.reduce(
+            (acc, product) => acc + product.price * product.amount,
+            0
+          ),
+          products: productResponse.data,
+          paid: paymentResponse.data.paid,
+        };
+
+        setOrders([enhancedOrder]);
+      }
+    } catch (error) {
+      console.error("Error fetching order by ID:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,21 +197,11 @@ export default function OrderTable() {
     [visibleColumns]
   );
 
-  const filteredItems = useMemo(
-    () =>
-      hasSearchFilter
-        ? orders.filter((order) =>
-            order.idOrder.toString().includes(filterValue.toLowerCase())
-          )
-        : orders,
-    [orders, filterValue, hasSearchFilter]
-  );
-
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+  const pages = Math.ceil(orders.length / rowsPerPage);
 
   const items = useMemo(
-    () => filteredItems.slice((page - 1) * rowsPerPage, page * rowsPerPage),
-    [page, filteredItems, rowsPerPage]
+    () => orders.slice((page - 1) * rowsPerPage, page * rowsPerPage),
+    [page, orders, rowsPerPage]
   );
 
   const sortedItems = useMemo(
@@ -164,7 +225,7 @@ export default function OrderTable() {
 
   const deleteOrder = async (id) => {
     try {
-      await axios.delete(API_URL + `/Order/DeleteOrder`, {
+      await axios.delete(`${API_URL}/Order/DeleteOrder`, {
         params: { idOrder: id },
       });
       setAlertData({
@@ -193,6 +254,36 @@ export default function OrderTable() {
     setSelectedOrder(null);
   };
 
+  const openLinkModal = (order) => {
+    setIsLinkModalOpen(true);
+    setSelectedOrder(order);
+  };
+
+  const closeLinkModal = () => {
+    setIsLinkModalOpen(false);
+    setSelectedOrder(null);
+    setTrackingLink("");
+  };
+
+  const handleAddTrackingLink = async () => {
+    try {
+      await axios.put(`${API_URL}/Order/UpdateTrackingLink`, {
+        idOrder: selectedOrder.idOrder,
+        trackingLink: trackingLink,
+      });
+      setAlertData({
+        isOpen: true,
+        variant: "success",
+        title: "Link Tracciamento Aggiornato",
+        message: "Il link di tracciamento è stato aggiunto con successo!",
+      });
+      fetchOrders();
+      closeLinkModal();
+    } catch (error) {
+      console.error("Error adding tracking link:", error);
+    }
+  };
+
   const renderCell = useCallback((order, columnKey) => {
     switch (columnKey) {
       case "idOrder":
@@ -202,9 +293,21 @@ export default function OrderTable() {
       case "address":
         return <div>{order.address}</div>;
       case "total":
-        return <div>{order.total}</div>;
+        return <div>{order.total} €</div>;
       case "paid":
-        return <div>{order.paid ? "Sì" : "No"}</div>;
+        return (
+          <div>
+            {order.paid ? (
+              <Chip color="success" className="text-white" size="sm">
+                Effettuato
+              </Chip>
+            ) : (
+              <Chip color="error" size="sm">
+                Non Effettuato
+              </Chip>
+            )}
+          </div>
+        );
       case "createdDatetime":
         return <div>{dayjs(order.createdDatetime).format("DD/MM/YYYY")}</div>;
       case "actions":
@@ -224,13 +327,21 @@ export default function OrderTable() {
                   Visualizza
                 </DropdownItem>
                 <DropdownItem
-                  className="text-danger"
-                  color="danger"
-                  onClick={() => deleteOrder(order.idOrder)}
-                  startContent={<DeleteOutlineRoundedIcon />}
+                  startContent={<InsertLinkOutlinedIcon />}
+                  onClick={() => openLinkModal(order)}
                 >
-                  Elimina
+                  Inserisci link tracciamento
                 </DropdownItem>
+                {!order.paid && (
+                  <DropdownItem
+                    className="text-danger"
+                    color="danger"
+                    onClick={() => deleteOrder(order.idOrder)}
+                    startContent={<DeleteOutlineRoundedIcon />}
+                  >
+                    Elimina
+                  </DropdownItem>
+                )}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -288,55 +399,53 @@ export default function OrderTable() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      {alertData.isOpen && (
-        <Backdrop
-          sx={{
-            backdropFilter: "blur(5px)",
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-          }}
-          open={alertData.isOpen}
-          onClick={handleClose}
+
+      <div className="relative">
+        <Table
+          aria-label="Example table with custom cells, pagination and sorting"
+          isStriped
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+          classNames={{ wrapper: "max-h-[382px]" }}
+          sortDescriptor={sortDescriptor}
+          onSortChange={setSortDescriptor}
+          topContent={topContent}
+          topContentPlacement="outside"
         >
-          <Spinner color="primary" size="lg" />
-        </Backdrop>
-      )}
-      <Table
-        aria-label="Example table with custom cells, pagination and sorting"
-        isStriped
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={{ wrapper: "max-h-[382px]" }}
-        sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
-        topContent={topContent}
-        topContentPlacement="outside"
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody emptyContent="Nessun ordine trovato" items={sortedItems}>
-          {(order) => (
-            <TableRow key={order.idOrder}>
-              {(columnKey) => (
-                <TableCell>{renderCell(order, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "center" : "start"}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody emptyContent="Nessun ordine trovato" items={sortedItems}>
+            {(order) => (
+              <TableRow key={order.idOrder}>
+                {(columnKey) => (
+                  <TableCell>{renderCell(order, columnKey)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+
+        {isLoading && (
+          <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-50 z-10">
+            <Spinner color="primary" size="lg" />
+          </div>
+        )}
+      </div>
 
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
         aria-labelledby="modal-title"
+        placement="center"
       >
         <ModalContent>
           {(onClose) => (
@@ -357,14 +466,42 @@ export default function OrderTable() {
                       <strong>Indirizzo:</strong> {selectedOrder.address}
                     </p>
                     <p>
-                      <strong>Totale:</strong> {selectedOrder.total}
+                      <strong>Totale:</strong> {selectedOrder.total} €
                     </p>
                     <p>
-                      <strong>Pagamento:</strong>{" "}
-                      {selectedOrder.paid ? "Sì" : "No"}
+                      <strong>
+                        Pagamento:{" "}
+                        {selectedOrder.paid ? (
+                          <Chip
+                            color="success"
+                            className="text-white"
+                            size="sm"
+                          >
+                            Effettuato
+                          </Chip>
+                        ) : (
+                          <Chip color="error" size="sm">
+                            Non Effettuato
+                          </Chip>
+                        )}
+                      </strong>{" "}
                     </p>
                     <strong>Data Creazione:</strong>{" "}
                     {dayjs(selectedOrder.createdDatetime).format("DD/MM/YYYY")}
+                    <p>
+                      <strong>Prodotti:</strong>
+                      {selectedOrder.products.map((product) => (
+                        <div key={product.idProduct}>
+                          <a
+                            className="underline"
+                            href={`https://www.tenutefarina.it/store/product/${product.idProduct}/${product.productName}`}
+                          >
+                            {product.productName}
+                          </a>{" "}
+                          - {product.amount} x {product.price} €
+                        </div>
+                      ))}
+                    </p>
                   </div>
                 )}
               </ModalBody>
@@ -380,6 +517,39 @@ export default function OrderTable() {
               </ModalFooter>
             </>
           )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isLinkModalOpen}
+        onClose={closeLinkModal}
+        aria-labelledby="link-modal-title"
+        placement="center"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 id="link-modal-title">Inserisci Link di Tracciamento</h3>
+          </ModalHeader>
+          <ModalBody>
+            <Input
+              placeholder="Inserisci il link di tracciamento"
+              value={trackingLink}
+              onChange={(e) => setTrackingLink(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button auto onClick={closeLinkModal}>
+              Annulla
+            </Button>
+            <Button
+              color="primary"
+              auto
+              onClick={handleAddTrackingLink}
+              disabled={!trackingLink.trim()}
+            >
+              Conferma
+            </Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </>

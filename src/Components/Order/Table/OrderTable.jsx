@@ -113,7 +113,7 @@ export default function OrderTable() {
           return {
             ...order,
             customerName: `${customerResponse.data.name} ${customerResponse.data.surname}`,
-            address: `${addressResponse.data.address} ${addressResponse.data.civicNumber} ${addressResponse.data.city} ${addressResponse.data.cap} ${addressResponse.data.province} ${addressResponse.data.nation}`,
+            address: `${addressResponse.data.name}, ${addressResponse.data.address} ${addressResponse.data.civicNumber} ${addressResponse.data.city} ${addressResponse.data.cap} ${addressResponse.data.province} ${addressResponse.data.nation}`,
             total: productResponse.data.reduce(
               (acc, product) => acc + product.price * product.amount,
               0
@@ -123,7 +123,6 @@ export default function OrderTable() {
           };
         })
       );
-
       setOrders(enhancedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -450,58 +449,96 @@ export default function OrderTable() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                <h3 id="modal-title">Dettagli Ordine</h3>
+              <ModalHeader className="flex flex-col gap-1 mt-2">
+                <h3 id="modal-title" className="text-xl font-bold">
+                  Dettagli Ordine #{selectedOrder.idOrder}
+                </h3>
               </ModalHeader>
               <ModalBody>
                 {selectedOrder && (
-                  <div>
-                    <p>
-                      <strong>ID Ordine:</strong> {selectedOrder.idOrder}
-                    </p>
-                    <p>
-                      <strong>Cliente:</strong> {selectedOrder.customerName}
-                    </p>
-                    <p>
-                      <strong>Indirizzo:</strong> {selectedOrder.address}
-                    </p>
-                    <p>
-                      <strong>Totale:</strong> {selectedOrder.total} €
-                    </p>
-                    <p>
-                      <strong>
-                        Pagamento:{" "}
-                        {selectedOrder.paid ? (
-                          <Chip
-                            color="success"
-                            className="text-white"
-                            size="sm"
-                          >
-                            Effettuato
-                          </Chip>
-                        ) : (
-                          <Chip color="error" size="sm">
-                            Non Effettuato
-                          </Chip>
-                        )}
-                      </strong>{" "}
-                    </p>
-                    <strong>Data Creazione:</strong>{" "}
-                    {dayjs(selectedOrder.createdDatetime).format("DD/MM/YYYY")}
-                    <p>
-                      <strong>Prodotti:</strong>
-                      {selectedOrder.products.map((product) => (
-                        <div key={product.idProduct}>
-                          <a
-                            className="underline"
-                            href={`https://www.tenutefarina.it/store/product/${product.idProduct}/${product.productName}`}
-                          >
-                            {product.productName}
-                          </a>{" "}
-                          - {product.amount} x {product.price} €
-                        </div>
-                      ))}
-                    </p>
+                  <div className="space-y-4">
+                    <hr />
+                    <div>
+                      <p className="text-md">
+                        <strong>Cliente:</strong> {selectedOrder.customerName}
+                      </p>
+                    </div>
+                    <hr />
+                    <div className="gap-4">
+                      <div>
+                        <p className="text-md">
+                          <strong>Indirizzo di spedizione:</strong>{" "}
+                          {selectedOrder.address}
+                        </p>
+                        <p className="text-md">
+                          <strong>Totale:</strong> {selectedOrder.total} €
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-md">
+                          <strong>
+                            Pagamento:{" "}
+                            {selectedOrder.paid ? (
+                              <Chip
+                                color="success"
+                                className="text-white"
+                                size="sm"
+                                radius="sm"
+                              >
+                                Effettuato
+                              </Chip>
+                            ) : (
+                              <Chip color="error" size="sm">
+                                Non Effettuato
+                              </Chip>
+                            )}
+                          </strong>
+                        </p>
+                        <p className="text-md">
+                          <strong>Data Creazione:</strong>{" "}
+                          {dayjs(selectedOrder.createdDatetime).format(
+                            "DD/MM/YYYY"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <hr className="my-2" />
+                    <h4 className="text-md font-bold mb-2">Prodotti</h4>
+                    <table className="min-w-full leading-normal border-2">
+                      <thead>
+                        <tr>
+                          <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Prodotto
+                          </th>
+                          <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Quantità
+                          </th>
+                          <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Prezzo
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedOrder.products.map((product) => (
+                          <tr key={product.idProduct}>
+                            <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                              <a
+                                className="underline"
+                                href={`https://www.tenutefarina.it/store/product/${product.idProduct}/${product.productName}`}
+                              >
+                                {product.productName}
+                              </a>
+                            </td>
+                            <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                              {product.amount}
+                            </td>
+                            <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                              {product.price} €
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </ModalBody>

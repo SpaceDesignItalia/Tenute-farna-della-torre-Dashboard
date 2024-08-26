@@ -295,7 +295,7 @@ export default function AddDiscount() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+      <div className="py-10 p-10 flex flex-col gap-10 lg:ml-72">
         <Breadcrumbs>
           <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
           <BreadcrumbItem href="/discounts">Sconti</BreadcrumbItem>
@@ -347,7 +347,6 @@ export default function AddDiscount() {
                       <Input
                         variant="bordered"
                         placeholder="Codice sconto"
-                        size="sm"
                         radius="sm"
                         className="lg:w-1/2"
                         onChange={handleDiscountCode}
@@ -436,7 +435,6 @@ export default function AddDiscount() {
                       type="text"
                       variant="bordered"
                       placeholder="0"
-                      size="sm"
                       radius="sm"
                       className="lg:w-1/2"
                       value={newDiscount.discountValue}
@@ -462,7 +460,6 @@ export default function AddDiscount() {
                   <div className="mt-2 sm:col-span-2 sm:mt-0">
                     <Input
                       variant="bordered"
-                      size="sm"
                       radius="sm"
                       className="lg:w-1/2"
                       type="date"

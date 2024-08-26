@@ -48,16 +48,15 @@ export default function Login() {
               <form className="space-y-6">
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="password"
                     className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Email
                   </label>
                   <div className="mt-2">
                     <Input
+                      label="Email"
                       variant="bordered"
-                      size="sm"
-                      radius="sm"
                       placeholder="Email"
                       onChange={handleEmailChange}
                     />

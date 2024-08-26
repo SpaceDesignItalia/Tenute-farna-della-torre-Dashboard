@@ -188,7 +188,6 @@ export default function FeaturedProductTable() {
             className="lg:w-1/3"
             placeholder="Cerca per nome prodotto"
             variant="bordered"
-            size="sm"
             startContent={<SearchRoundedIcon />}
             onChange={(e) => searchProduct(e.target.value)}
           />

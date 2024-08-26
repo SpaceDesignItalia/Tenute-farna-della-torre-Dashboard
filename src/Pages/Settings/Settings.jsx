@@ -15,7 +15,7 @@ export default function Settings() {
 
   return (
     <div>
-      <div className="py-10 p-10 lg:pl-unit-80">
+      <div className="py-10 p-10 lg:ml-72">
         <main className="flex-1">
           <div className="relative mx-auto max-w-4xl">
             <div className="pb-16 pt-10">

@@ -6,6 +6,7 @@ export default function Cards() {
   const [statsData, setStatsData] = useState({
     usersNumber: 0,
     productsInStock: 0,
+    ordersToSend: 0,
   });
 
   useEffect(() => {
@@ -21,11 +22,18 @@ export default function Cards() {
         productsInStock: res.data.analytic[0].StocksNumber,
       }));
     });
+    axios.get(API_URL + "/Analytic/GetOrdersToSend").then((res) => {
+      setStatsData((prevData) => ({
+        ...prevData,
+        ordersToSend: res.data.analytic[0].OrdersToSend,
+      }));
+    });
   }, []);
 
   const stats = [
     { name: "Clienti registrati", stat: statsData.usersNumber },
     { name: "Prodotti in magazzino", stat: statsData.productsInStock },
+    { name: "Ordini da spedire", stat: statsData.ordersToSend },
   ];
 
   function classNames(...classes) {

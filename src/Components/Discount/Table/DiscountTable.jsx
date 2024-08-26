@@ -258,7 +258,6 @@ export default function DiscountTable() {
             className="lg:w-1/3"
             placeholder="Cerca per codice sconto"
             variant="bordered"
-            size="sm"
             startContent={<SearchRoundedIcon />}
             onChange={(e) => searchProduct(e.target.value)}
           />

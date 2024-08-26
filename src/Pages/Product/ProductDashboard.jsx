@@ -5,7 +5,7 @@ import { BreadcrumbItem, Breadcrumbs } from "@nextui-org/react";
 
 export default function ProductDashboard() {
   return (
-    <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+    <div className="py-10 p-10 lg:ml-72 flex flex-col gap-10">
       <Breadcrumbs>
         <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
         <BreadcrumbItem href="/products">Prodotti</BreadcrumbItem>

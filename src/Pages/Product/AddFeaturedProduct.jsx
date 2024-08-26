@@ -97,7 +97,7 @@ export default function AddFeaturedProduct() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10 lg:ml-72">
         <Breadcrumbs>
           <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
           <BreadcrumbItem href="/products">Prodotti</BreadcrumbItem>

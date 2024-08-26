@@ -20,6 +20,7 @@ import {
   ModalContent,
   Spinner,
   Chip,
+  Link,
 } from "@nextui-org/react";
 import { AlertTitle, Alert, Snackbar } from "@mui/material";
 import dayjs from "dayjs";
@@ -264,20 +265,24 @@ export default function OrderTable() {
     setTrackingLink("");
   };
 
-  const handleAddTrackingLink = async () => {
+  const handleAddTrackingLink = async (orderId) => {
     try {
-      await axios.put(`${API_URL}/Order/UpdateTrackingLink`, {
-        idOrder: selectedOrder.idOrder,
-        trackingLink: trackingLink,
+      const res = await axios.put(API_URL + "/Order/SetTrakingLink", {
+        shippingLink: trackingLink,
+        orderId: orderId,
       });
-      setAlertData({
-        isOpen: true,
-        variant: "success",
-        title: "Link Tracciamento Aggiornato",
-        message: "Il link di tracciamento è stato aggiunto con successo!",
-      });
-      fetchOrders();
-      closeLinkModal();
+
+      if (res.status == 200) {
+        setAlertData({
+          isOpen: true,
+          variant: "success",
+          title: "Link Tracciamento Aggiornato",
+          message: "Il link di tracciamento è stato aggiunto con successo!",
+        });
+        setTimeout(() => {
+          window.location.href = "/orders";
+        }, 1000);
+      }
     } catch (error) {
       console.error("Error adding tracking link:", error);
     }
@@ -301,8 +306,22 @@ export default function OrderTable() {
                 Effettuato
               </Chip>
             ) : (
-              <Chip color="error" size="sm">
+              <Chip color="danger" size="sm">
                 Non Effettuato
+              </Chip>
+            )}
+          </div>
+        );
+      case "shipped":
+        return (
+          <div>
+            {order.shippingLink != null ? (
+              <Chip color="success" className="text-white" size="sm">
+                Spedito
+              </Chip>
+            ) : (
+              <Chip color="danger" size="sm">
+                Non Spedito
               </Chip>
             )}
           </div>
@@ -329,7 +348,8 @@ export default function OrderTable() {
                   startContent={<InsertLinkOutlinedIcon />}
                   onClick={() => openLinkModal(order)}
                 >
-                  Inserisci link tracciamento
+                  {order.shippingLink !== null ? "Modifica" : "Inserisci"} link
+                  tracciamento
                 </DropdownItem>
                 {!order.paid && (
                   <DropdownItem
@@ -358,7 +378,6 @@ export default function OrderTable() {
             className="lg:w-1/3"
             placeholder="Cerca per ID Ordine"
             variant="bordered"
-            size="sm"
             startContent={<SearchRoundedIcon />}
             onChange={(e) => searchOrder(e.target.value)}
           />
@@ -422,7 +441,21 @@ export default function OrderTable() {
               </TableColumn>
             )}
           </TableHeader>
-          <TableBody emptyContent="Nessun ordine trovato" items={sortedItems}>
+          <TableBody
+            emptyContent={
+              isLoading ? (
+                <Spinner
+                  color="primary"
+                  size="lg"
+                  label="Caricamento..."
+                  labelColor="primary"
+                />
+              ) : (
+                "Nessun ordine trovato"
+              )
+            }
+            items={sortedItems}
+          >
             {(order) => (
               <TableRow key={order.idOrder}>
                 {(columnKey) => (
@@ -432,76 +465,94 @@ export default function OrderTable() {
             )}
           </TableBody>
         </Table>
-
-        {isLoading && (
-          <div className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-50 z-10">
-            <Spinner color="primary" size="lg" />
-          </div>
-        )}
       </div>
 
-      <Modal
+      <OrderDetailsModal
         isOpen={isModalOpen}
-        onClose={closeModal}
-        aria-labelledby="modal-title"
-        placement="center"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1 mt-2">
-                <h3 id="modal-title" className="text-xl font-bold">
-                  Dettagli Ordine #{selectedOrder.idOrder}
-                </h3>
-              </ModalHeader>
-              <ModalBody>
-                {selectedOrder && (
-                  <div className="space-y-4">
-                    <hr />
-                    <div>
-                      <p className="text-md">
-                        <strong>Cliente:</strong> {selectedOrder.customerName}
-                      </p>
-                    </div>
-                    <hr />
-                    <div className="gap-4">
-                      <div>
-                        <p className="text-md">
-                          <strong>Indirizzo di spedizione:</strong>{" "}
-                          {selectedOrder.address}
-                        </p>
-                        <p className="text-md">
-                          <strong>Totale:</strong> {selectedOrder.total} €
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-md">
-                          <strong>
-                            Pagamento:{" "}
-                            {selectedOrder.paid ? (
-                              <Chip
-                                color="success"
-                                className="text-white"
-                                size="sm"
-                                radius="sm"
-                              >
-                                Effettuato
-                              </Chip>
-                            ) : (
-                              <Chip color="error" size="sm">
-                                Non Effettuato
-                              </Chip>
-                            )}
-                          </strong>
-                        </p>
-                        <p className="text-md">
-                          <strong>Data Creazione:</strong>{" "}
-                          {dayjs(selectedOrder.createdDatetime).format(
-                            "DD/MM/YYYY"
-                          )}
-                        </p>
-                      </div>
-                    </div>
+        closeModal={closeModal}
+        selectedOrder={selectedOrder}
+      />
+
+      <TrackingLinkModal
+        isOpen={isLinkModalOpen}
+        closeModal={closeLinkModal}
+        selectedOrder={selectedOrder}
+        trackingLink={trackingLink}
+        setTrackingLink={setTrackingLink}
+        handleAddTrackingLink={handleAddTrackingLink}
+      />
+    </>
+  );
+}
+
+function OrderDetailsModal({ isOpen, closeModal, selectedOrder }) {
+  console.log(selectedOrder);
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={closeModal}
+      aria-labelledby="modal-title"
+      placement="center"
+      size="5xl"
+    >
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1 mt-2">
+              <h3 id="modal-title" className="text-xl font-bold">
+                Dettagli Ordine #{selectedOrder?.idOrder}
+              </h3>
+            </ModalHeader>
+            <ModalBody>
+              {selectedOrder && (
+                <div className="space-y-4">
+                  <hr />
+                  <div>
+                    <p>
+                      <strong>Cliente:</strong> {selectedOrder.customerName}
+                    </p>
+                    <p>
+                      <strong>Indirizzo:</strong> {selectedOrder.address}
+                    </p>
+                    <p>
+                      <strong>Totale:</strong> €{selectedOrder.total}
+                    </p>
+                    <p className="text-md">
+                      <strong>
+                        Pagamento:{" "}
+                        {selectedOrder.paid ? (
+                          <Chip
+                            color="success"
+                            className="text-white"
+                            size="sm"
+                            radius="sm"
+                          >
+                            Effettuato
+                          </Chip>
+                        ) : (
+                          <Chip color="error" size="sm">
+                            Non Effettuato
+                          </Chip>
+                        )}
+                      </strong>
+                    </p>
+                    <p className="text-md">
+                      <strong>Traking Link:</strong>{" "}
+                      <Link
+                        href={selectedOrder.shippingLink}
+                        isExternal
+                        showAnchorIcon
+                      >
+                        {selectedOrder.shippingLink}
+                      </Link>
+                    </p>
+                    <p>
+                      <strong>Data Creazione:</strong>{" "}
+                      {dayjs(selectedOrder.createdDatetime).format(
+                        "DD/MM/YYYY"
+                      )}
+                    </p>
+
                     <hr className="my-2" />
                     <h4 className="text-md font-bold mb-2">Prodotti</h4>
                     <table className="min-w-full leading-normal border-2">
@@ -540,55 +591,74 @@ export default function OrderTable() {
                       </tbody>
                     </table>
                   </div>
-                )}
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  color="danger"
-                  variant="light"
-                  auto
-                  onClick={closeModal}
-                >
-                  Chiudi
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+                </div>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="flat" onClick={onClose}>
+                Chiudi
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+}
 
-      <Modal
-        isOpen={isLinkModalOpen}
-        onClose={closeLinkModal}
-        aria-labelledby="link-modal-title"
-        placement="center"
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <h3 id="link-modal-title">Inserisci Link di Tracciamento</h3>
-          </ModalHeader>
-          <ModalBody>
-            <Input
-              placeholder="Inserisci il link di tracciamento"
-              value={trackingLink}
-              onChange={(e) => setTrackingLink(e.target.value)}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button auto onClick={closeLinkModal}>
-              Annulla
-            </Button>
-            <Button
-              color="primary"
-              auto
-              onClick={handleAddTrackingLink}
-              disabled={!trackingLink.trim()}
-            >
-              Conferma
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+function TrackingLinkModal({
+  isOpen,
+  closeModal,
+  selectedOrder,
+  trackingLink,
+  setTrackingLink,
+  handleAddTrackingLink,
+}) {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={closeModal}
+      aria-labelledby="modal-title"
+      placement="center"
+      size="md"
+    >
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1 mt-2">
+              <h3 id="modal-title" className="text-xl font-bold">
+                {selectedOrder.shippingLink !== null ? "Modifica" : "Aggiungi"}{" "}
+                Tracking Link per Ordine #{selectedOrder?.idOrder}
+              </h3>
+            </ModalHeader>
+            <ModalBody>
+              {selectedOrder && (
+                <div className="space-y-4">
+                  <Input
+                    label="Tracking Link"
+                    placeholder="Inserisci link di tracking"
+                    value={trackingLink}
+                    onChange={(e) => setTrackingLink(e.target.value)}
+                    fullWidth
+                  />
+                </div>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="primary"
+                onClick={() => handleAddTrackingLink(selectedOrder.idOrder)}
+              >
+                {selectedOrder.shippingLink !== null ? "Modifica" : "Aggiungi"}{" "}
+                Link
+              </Button>
+              <Button color="danger" variant="flat" onClick={onClose}>
+                Annulla
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
   );
 }

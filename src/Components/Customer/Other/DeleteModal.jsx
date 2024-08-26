@@ -17,7 +17,11 @@ export default function DeleteModal({ customer }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   function deleteAccount() {
-    axios.delete(API_URL + "/Customer/DeleteCustomer/" + customer.id);
+    axios
+      .delete(API_URL + "/Customer/DeleteCustomer", {
+        params: { userData: customer },
+      })
+      .then(window.location.reload());
   }
 
   return (

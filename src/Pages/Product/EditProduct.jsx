@@ -265,7 +265,7 @@ export default function EditProduct() {
           {alertData.message}
         </Alert>
       </Snackbar>
-      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10">
+      <div className="py-10 p-10 lg:pl-unit-80 flex flex-col gap-10 lg:ml-72">
         <Breadcrumbs>
           <BreadcrumbItem href="/">Dashboard</BreadcrumbItem>
           <BreadcrumbItem href="/products">Prodotti</BreadcrumbItem>
@@ -291,7 +291,6 @@ export default function EditProduct() {
                     <Input
                       variant="bordered"
                       placeholder="Nome prodotto"
-                      size="sm"
                       radius="sm"
                       className="lg:w-1/2"
                       onChange={(e) => handleProductName(e)}
@@ -329,7 +328,6 @@ export default function EditProduct() {
                       type="text"
                       variant="bordered"
                       placeholder="0"
-                      size="sm"
                       radius="sm"
                       className="lg:w-1/2"
                       endContent="Pz."
@@ -350,7 +348,6 @@ export default function EditProduct() {
                       type="text"
                       variant="bordered"
                       placeholder="0.00"
-                      size="sm"
                       radius="sm"
                       className="lg:w-1/2"
                       endContent="€"

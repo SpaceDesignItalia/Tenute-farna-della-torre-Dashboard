@@ -4,7 +4,7 @@ import ProductTable from "../../Components/Home/Table/ProductTable";
 
 export default function Home() {
   return (
-    <div className="py-10 p-10 lg:pl-unit-80">
+    <div className="py-10 p-10 lg:ml-72">
       <h1 className="font-bold text-3xl">Dashboard</h1>
       <div className="flex flex-col gap-5">
         <Cards />

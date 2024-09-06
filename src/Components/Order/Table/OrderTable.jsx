@@ -267,21 +267,30 @@ export default function OrderTable() {
 
   const handleAddTrackingLink = async (orderId) => {
     try {
-      const res = await axios.put(API_URL + "/Order/SetTrakingLink", {
-        shippingLink: trackingLink,
-        orderId: orderId,
-      });
+      const customerResponse = await axios.get(
+        API_URL + `/Customer/GetCustomerById/${selectedOrder.idCustomer}`
+      );
 
-      if (res.status == 200) {
-        setAlertData({
-          isOpen: true,
-          variant: "success",
-          title: "Link Tracciamento Aggiornato",
-          message: "Il link di tracciamento è stato aggiunto con successo!",
+      if (customerResponse.status == 200) {
+        const customerData = customerResponse.data;
+
+        const res = await axios.put(API_URL + "/Order/SetTrackingLink", {
+          shippingLink: trackingLink,
+          customer: customerData,
+          orderId: orderId,
         });
-        setTimeout(() => {
-          window.location.href = "/orders";
-        }, 1000);
+
+        if (res.status == 200) {
+          setAlertData({
+            isOpen: true,
+            variant: "success",
+            title: "Link Tracciamento Aggiornato",
+            message: "Il link di tracciamento è stato aggiunto con successo!",
+          });
+          setTimeout(() => {
+            window.location.href = "/orders";
+          }, 1000);
+        }
       }
     } catch (error) {
       console.error("Error adding tracking link:", error);
@@ -486,7 +495,6 @@ export default function OrderTable() {
 }
 
 function OrderDetailsModal({ isOpen, closeModal, selectedOrder }) {
-  console.log(selectedOrder);
   return (
     <Modal
       isOpen={isOpen}
@@ -537,15 +545,25 @@ function OrderDetailsModal({ isOpen, closeModal, selectedOrder }) {
                       </strong>
                     </p>
                     <p className="text-md">
-                      <strong>Traking Link:</strong>{" "}
-                      <Link
-                        href={selectedOrder.shippingLink}
-                        isExternal
-                        showAnchorIcon
-                      >
-                        {selectedOrder.shippingLink}
-                      </Link>
+                      <strong>Tracking Link:</strong>{" "}
+                      {selectedOrder.shippingLink !== null ? (
+                        <Link
+                          href={
+                            selectedOrder.shippingLink.startsWith("http://") ||
+                            selectedOrder.shippingLink.startsWith("https://")
+                              ? selectedOrder.shippingLink
+                              : `http://${selectedOrder.shippingLink}`
+                          }
+                          isExternal
+                          showAnchorIcon
+                        >
+                          {selectedOrder.shippingLink}
+                        </Link>
+                      ) : (
+                        "Non disponibile"
+                      )}
                     </p>
+
                     <p>
                       <strong>Data Creazione:</strong>{" "}
                       {dayjs(selectedOrder.createdDatetime).format(

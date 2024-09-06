@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function TrakingLinkModal(isOpen) {
+export default function TrackingLinkModal(isOpen) {
   return (
     <Modal
       isOpen={isLinkModalOpen}

@@ -664,13 +664,19 @@ function TrackingLinkModal({
             </ModalBody>
             <ModalFooter>
               <Button
+                radius="sm"
                 color="primary"
                 onClick={() => handleAddTrackingLink(selectedOrder.idOrder)}
               >
                 {selectedOrder.shippingLink !== null ? "Modifica" : "Aggiungi"}{" "}
                 Link
               </Button>
-              <Button color="danger" variant="flat" onClick={onClose}>
+              <Button
+                radius="sm"
+                color="danger"
+                variant="flat"
+                onClick={onClose}
+              >
                 Annulla
               </Button>
             </ModalFooter>
